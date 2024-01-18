@@ -5,7 +5,7 @@ import os.path as osp
 
 # Related third-party imports
 import torch
-from torch.utils.data import Dataset
+from torch_geometric.data import Dataset
 from tqdm import tqdm
 import pandas as pd
 from torch_geometric.data import Data
@@ -30,14 +30,16 @@ class GraphTextDataset(Dataset):
         self.preprocessed_dir = osp.join(self.root, 'preprocessed', self.nlp_model, self.split)
         if not os.path.exists(self.preprocessed_dir):
             os.makedirs(self.preprocessed_dir)
-            self.process()
+            self.preprocess()
 
         if self.in_memory:
             self.data = []
             for cid in tqdm(self.cids, desc='Loading data'):
                 self.data.append(torch.load(osp.join(self.preprocessed_dir, 'data_{}.pt'.format(cid))))
 
-    def process(self):
+        super(GraphTextDataset, self).__init__()
+
+    def preprocess(self):
         num_workers = os.cpu_count()
         with ThreadPoolExecutor(max_workers=num_workers) as executor:
             futures = []
@@ -58,10 +60,10 @@ class GraphTextDataset(Dataset):
         data = Data(x=x, edge_index=edge_index, input_ids=input_ids, attention_mask=attention_mask)
         torch.save(data, osp.join(self.preprocessed_dir, 'data_{}.pt'.format(cid)))
 
-    def __len__(self):
+    def len(self):
         return len(self.cids)
     
-    def __getitem__(self, idx):
+    def get(self, idx):
         if self.in_memory:
             return self.data[idx]
         else:
