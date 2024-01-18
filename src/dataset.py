@@ -5,7 +5,7 @@ import os.path as osp
 
 # Related third-party imports
 import torch
-from torch.utils.data import Dataset
+from torch_geometric.data import Dataset
 from tqdm import tqdm
 import pandas as pd
 from torch_geometric.data import Data
@@ -30,14 +30,14 @@ class GraphTextDataset(Dataset):
         self.preprocessed_dir = osp.join(self.root, 'preprocessed', self.nlp_model, self.split)
         if not os.path.exists(self.preprocessed_dir):
             os.makedirs(self.preprocessed_dir)
-            self.process()
+            self.preprocess()
 
         if self.in_memory:
             self.data = []
             for cid in tqdm(self.cids, desc='Loading data'):
                 self.data.append(torch.load(osp.join(self.preprocessed_dir, 'data_{}.pt'.format(cid))))
 
-    def process(self):
+    def preprocess(self):
         num_workers = os.cpu_count()
         with ThreadPoolExecutor(max_workers=num_workers) as executor:
             futures = []
@@ -53,21 +53,6 @@ class GraphTextDataset(Dataset):
     def process_single(self, cid):
         raw_path = osp.join(self.root, 'raw', str(cid) + '.graph')
         edge_index, x = process_graph(raw_path, self.gt)
-
-        # assert edge_index.shape[0] == 2
-        # assert edge_index.dim() == 2
-        # assert x.dim() == 2
-
-        # if edge_index.shape[0] != 2:
-        #     print(edge_index.shape)
-        #     print(cid)
-        # if edge_index.dim() != 2:
-        #     print(edge_index.dim())
-        #     print(cid)
-        # if x.dim() != 2:
-        #     print(x.dim())
-        #     print(cid)
-
         text = self.description[cid]
         input_ids, attention_mask = process_text(text, self.tokenizer)
         data = Data(x=x, edge_index=edge_index, input_ids=input_ids, attention_mask=attention_mask)
