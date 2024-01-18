@@ -117,7 +117,6 @@ if __name__ == "__main__":
     val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=True, num_workers=2)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    device = "cpu"
 
     model = Model(
         model_name=model_name,
