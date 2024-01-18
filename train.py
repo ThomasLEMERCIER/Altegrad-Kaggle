@@ -110,10 +110,10 @@ if __name__ == "__main__":
 
     print("Loading datasets")
     loading_time = time.time()
-    # train_dataset = GraphTextDataset(root=root, gt=gt, split="train", tokenizer=tokenizer, nlp_model=model_name, in_memory=True)
-    # val_dataset = GraphTextDataset(root=root, gt=gt, split="val", tokenizer=tokenizer, nlp_model=model_name, in_memory=True)
-    train_dataset = GraphTextDataset(root=root, gt=gt, split="train", tokenizer=tokenizer)
-    val_dataset = GraphTextDataset(root=root, gt=gt, split="val", tokenizer=tokenizer)
+    train_dataset = GraphTextDataset(root=root, gt=gt, split="train", tokenizer=tokenizer, nlp_model=model_name, in_memory=True)
+    val_dataset = GraphTextDataset(root=root, gt=gt, split="val", tokenizer=tokenizer, nlp_model=model_name, in_memory=True)
+    # train_dataset = GraphTextDataset(root=root, gt=gt, split="train", tokenizer=tokenizer)
+    # val_dataset = GraphTextDataset(root=root, gt=gt, split="val", tokenizer=tokenizer)
     print("Loading time: ", time.time() - loading_time)
 
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=1)
