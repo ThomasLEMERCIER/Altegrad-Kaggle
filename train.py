@@ -90,6 +90,11 @@ if __name__ == "__main__":
 
     nout = config["nout"]
 
+    fine_tune = config.get("fine_tune", False)
+    if fine_tune:
+        run_name += "_finetune"
+        checkpoint_name = config["checkpoint_name"]
+
     checkpoint_path = osp.join("checkpoints", run_name)
     if not osp.exists(checkpoint_path):
         os.makedirs(checkpoint_path)
@@ -134,8 +139,19 @@ if __name__ == "__main__":
     )
 
     best_validation = np.inf
+    start_epoch = 1
 
-    for e in range(1, nb_epochs + 1):
+    if fine_tune:
+        checkpoint = torch.load(osp.join("checkpoints", checkpoint_name))
+        model.load_state_dict(checkpoint["model_state_dict"])
+        optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
+        best_validation = checkpoint["best_validation"]
+        start_epoch = checkpoint["epoch"] + 1
+        print("Loaded checkpoint: ", checkpoint_name)
+        print("Best validation loss: ", best_validation)
+        print("Starting from epoch: ", start_epoch)
+
+    for e in range(start_epoch, start_epoch + nb_epochs):
         print("----- EPOCH {} -----".format(e))
         trainning_loss = train_epoch(train_loader, device, model, optimizer)
         validation_loss = validation_epoch(val_loader, device, model)
