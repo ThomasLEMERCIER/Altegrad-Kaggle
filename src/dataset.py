@@ -53,6 +53,9 @@ class GraphTextDataset(Dataset):
     def process_single(self, cid):
         raw_path = osp.join(self.root, 'raw', str(cid) + '.graph')
         edge_index, x = process_graph(raw_path, self.gt)
+        assert edge_index.shape[0] == 2
+        assert edge_index.dim() == 2
+        assert x.dim() == 2
         text = self.description[cid]
         input_ids, attention_mask = process_text(text, self.tokenizer)
         data = Data(x=x, edge_index=edge_index, input_ids=input_ids, attention_mask=attention_mask)
