@@ -1,7 +1,7 @@
 import os
 import os.path as osp
 import torch
-from torch_geometric.data import Dataset 
+from torch_geometric.data import Dataset, InMemoryDataset
 from torch_geometric.data import Data
 from torch.utils.data import Dataset as TorchDataset
 import pandas as pd
@@ -61,8 +61,8 @@ class GraphTextDataset(Dataset):
             x.append(self.gt[substruct_id])
           else:
             x.append(self.gt['UNK'])
-        # edge_index = np.array(edge_index).T
-        # x = np.array(x)
+        edge_index = np.array(edge_index).T
+        x = np.array(x)
         return torch.LongTensor(edge_index).T, torch.FloatTensor(x)
 
     def process(self):

@@ -1,9 +1,7 @@
 from torch import nn
-import torch.nn.functional as F
-
+from transformers import AutoModel
 from torch_geometric.nn import GCNConv
 from torch_geometric.nn import global_mean_pool
-from transformers import AutoModel
 
 
 class GraphEncoder(nn.Module):
