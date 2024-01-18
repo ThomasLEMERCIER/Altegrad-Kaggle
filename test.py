@@ -8,18 +8,25 @@ import os.path as osp
 # Related third-party imports
 import torch
 import numpy as np
+from sklearn.metrics.pairwise import cosine_similarity
 from transformers import AutoTokenizer
 from torch_geometric.loader import DataLoader
 from torch.utils.data import DataLoader as TorchDataLoader
+import pandas as pd
 
-from tqdm import tqdm
 from yaml import safe_load
 
 # Local application/library specific imports
 from src.constants import *
 from src.dataset import GraphTextDataset, TextDataset, GraphDataset
 from src.model import Model
-from src.training import validation_epoch, text_inference, graph_inference
+from src.training import validation_epoch
+from src.evaluation import (
+    text_inference,
+    graph_inference,
+    text_graph_inference,
+    label_ranking_average_precision,
+)
 
 
 if __name__ == "__main__":
@@ -93,7 +100,15 @@ if __name__ == "__main__":
 
     validation_loss = validation_epoch(val_loader, device, model)
 
-    logging.info(f"Validation loss: {validation_loss}")
+    print(f"Validation loss: {validation_loss}")
+
+    text_val_embeddings, graph_val_embeddings = text_graph_inference(
+        val_loader, device, model
+    )
+
+    print(
+        f"LRAP on val: {label_ranking_average_precision(graph_val_embeddings, text_val_embeddings)}"
+    )
 
     # ----  test inference  ----
 
@@ -114,12 +129,7 @@ if __name__ == "__main__":
 
     graph_embeddings = graph_inference(graph_dataloader, device, graph_model)
 
-    from sklearn.metrics.pairwise import cosine_similarity
-    import pandas as pd
-
-    similarity = cosine_similarity(
-        np.concatenate(text_embeddings), np.concatenate(graph_embeddings)
-    )
+    similarity = cosine_similarity(text_embeddings, graph_embeddings)
 
     solution = pd.DataFrame(similarity)
     solution["ID"] = solution.index
