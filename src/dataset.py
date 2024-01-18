@@ -37,6 +37,8 @@ class GraphTextDataset(Dataset):
             for cid in tqdm(self.cids, desc='Loading data'):
                 self.data.append(torch.load(osp.join(self.preprocessed_dir, 'data_{}.pt'.format(cid))))
 
+        super(GraphTextDataset, self).__init__()
+
     def preprocess(self):
         num_workers = os.cpu_count()
         with ThreadPoolExecutor(max_workers=num_workers) as executor:
