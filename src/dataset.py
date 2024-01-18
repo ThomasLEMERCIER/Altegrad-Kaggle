@@ -58,15 +58,16 @@ class GraphTextDataset(Dataset):
         # assert edge_index.dim() == 2
         # assert x.dim() == 2
 
-        if edge_index.shape[0] != 2:
-            print(edge_index.shape)
-            print(cid)
-        if edge_index.dim() != 2:
-            print(edge_index.dim())
-            print(cid)
-        if x.dim() != 2:
-            print(x.dim())
-            print(cid)
+        # if edge_index.shape[0] != 2:
+        #     print(edge_index.shape)
+        #     print(cid)
+        # if edge_index.dim() != 2:
+        #     print(edge_index.dim())
+        #     print(cid)
+        # if x.dim() != 2:
+        #     print(x.dim())
+        #     print(cid)
+
         text = self.description[cid]
         input_ids, attention_mask = process_text(text, self.tokenizer)
         data = Data(x=x, edge_index=edge_index, input_ids=input_ids, attention_mask=attention_mask)
