@@ -21,7 +21,7 @@ def process_graph(raw_path, gt):
                 x.append(gt['UNK'])
     edge_index = np.array(edge_index).T
     x = np.array(x)
-    return torch.LongTensor(edge_index), torch.FloatTensor(x)
+    return torch.LongTensor(edge_index).reshape(2, -1), torch.FloatTensor(x)
 
 def process_text(text, tokenizer):
     text_input = tokenizer([text],

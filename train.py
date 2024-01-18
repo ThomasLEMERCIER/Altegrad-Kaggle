@@ -16,7 +16,6 @@ from yaml import safe_load
 # Local application/library specific imports
 from src.constants import *
 from src.dataset import GraphTextDataset
-# from src.dataloader import GraphTextDataset
 from src.loss import contrastive_loss
 from src.model import Model
 
