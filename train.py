@@ -8,7 +8,6 @@ import os.path as osp
 # Related third-party imports
 import torch
 import numpy as np
-from tqdm import tqdm
 from transformers import AutoTokenizer
 from torch_geometric.loader import DataLoader
 from yaml import safe_load
@@ -16,60 +15,10 @@ from yaml import safe_load
 # Local application/library specific imports
 from src.constants import *
 from src.dataset import GraphTextDataset
-from src.loss import contrastive_loss
 from src.model import Model
-
-def train_epoch(train_loader, device, model, optimizer):
-    model.train()
-    total_loss = 0
-    for batch in tqdm(train_loader, desc="Training"):
-        input_ids = batch.input_ids
-        attention_mask = batch.attention_mask
-        batch.pop("input_ids")
-        batch.pop("attention_mask")
-        graph_batch = batch
-
-        input_ids = input_ids.to(device)
-        attention_mask = attention_mask.to(device)
-        graph_batch = graph_batch.to(device)
-
-        optimizer.zero_grad()
-
-        graph_embeddings, text_embeddings = model(graph_batch, input_ids, attention_mask)
-        loss = contrastive_loss(graph_embeddings, text_embeddings)
-        total_loss += loss.item()
-
-        loss.backward()
-        optimizer.step()
-
-    average_loss = total_loss / len(train_loader)
-    return average_loss
-
-def validation_epoch(val_loader, device, model):
-    model.eval()
-    total_loss = 0
-    with torch.no_grad():
-        for batch in tqdm(val_loader, desc="Validation"):
-            input_ids = batch.input_ids
-            attention_mask = batch.attention_mask
-            batch.pop("input_ids")
-            batch.pop("attention_mask")
-            graph_batch = batch
-
-            input_ids = input_ids.to(device)
-            attention_mask = attention_mask.to(device)
-            graph_batch = graph_batch.to(device)
-
-
-            graph_embeddings, text_embeddings = model(graph_batch, input_ids, attention_mask)
-            loss = contrastive_loss(graph_embeddings, text_embeddings)
-            total_loss += loss.item()
-
-    average_loss = total_loss / len(val_loader)
-    return average_loss
+from src.training import train_epoch, validation_epoch
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", default="baseline.yaml", help="Name of config file")
 
@@ -114,12 +63,30 @@ if __name__ == "__main__":
 
     print("Loading datasets")
     loading_time = time.time()
-    train_dataset = GraphTextDataset(root=root, gt=gt, split="train", tokenizer=tokenizer, nlp_model=model_name, in_memory=True)
-    val_dataset = GraphTextDataset(root=root, gt=gt, split="val", tokenizer=tokenizer, nlp_model=model_name, in_memory=True)
+    train_dataset = GraphTextDataset(
+        root=root,
+        gt=gt,
+        split="train",
+        tokenizer=tokenizer,
+        nlp_model=model_name,
+        in_memory=True,
+    )
+    val_dataset = GraphTextDataset(
+        root=root,
+        gt=gt,
+        split="val",
+        tokenizer=tokenizer,
+        nlp_model=model_name,
+        in_memory=True,
+    )
     print("Loading time: ", time.time() - loading_time)
 
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=1)
-    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=True, num_workers=1)
+    train_loader = DataLoader(
+        train_dataset, batch_size=batch_size, shuffle=True, num_workers=1
+    )
+    val_loader = DataLoader(
+        val_dataset, batch_size=batch_size, shuffle=True, num_workers=1
+    )
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -172,5 +139,5 @@ if __name__ == "__main__":
             }
             save_path = osp.join(checkpoint_path, f"checkpoint_{e}.pt")
             torch.save(checkpoint, save_path)
-    
+
     logging.info(f"Best validation loss: {best_validation}")
