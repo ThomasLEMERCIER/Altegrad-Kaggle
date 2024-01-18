@@ -90,7 +90,7 @@ if __name__ == "__main__":
 
     nout = config["nout"]
 
-    fine_tune = config.get("fine_tune", False)
+    fine_tune = config.get("fine_tuning", False)
     if fine_tune:
         run_name += "_finetune"
         checkpoint_name = config["checkpoint_name"]
