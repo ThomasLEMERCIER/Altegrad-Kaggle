@@ -105,10 +105,10 @@ if __name__ == "__main__":
     for e in range(1, nb_epochs + 1):
         print("----- EPOCH {} -----".format(e))
         trainning_loss = train_epoch(train_loader, device, model, optimizer)
-        validation_loss = validation_epoch(val_loader, device, model)
+        validation_loss, validation_lrap = validation_epoch(val_loader, device, model)
 
         logging.info(
-            f"Epoch {e}: Training loss: {trainning_loss}, Validation loss: {validation_loss}"
+            f"Epoch {e}: Training loss: {trainning_loss}, Validation loss, LRAP: {validation_loss}, {validation_lrap}"
         )
 
         if validation_loss < best_validation:

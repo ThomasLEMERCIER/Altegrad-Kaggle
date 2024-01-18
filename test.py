@@ -21,12 +21,7 @@ from src.constants import *
 from src.dataset import GraphTextDataset, TextDataset, GraphDataset
 from src.model import Model
 from src.training import validation_epoch
-from src.evaluation import (
-    text_inference,
-    graph_inference,
-    text_graph_inference,
-    label_ranking_average_precision,
-)
+from src.evaluation import text_inference, graph_inference
 
 
 if __name__ == "__main__":
@@ -98,17 +93,10 @@ if __name__ == "__main__":
     model.to(device)
     model.eval()
 
-    validation_loss = validation_epoch(val_loader, device, model)
+    validation_loss, validation_lrap = validation_epoch(val_loader, device, model)
 
     print(f"Validation loss: {validation_loss}")
-
-    text_val_embeddings, graph_val_embeddings = text_graph_inference(
-        val_loader, device, model
-    )
-
-    print(
-        f"LRAP on val: {label_ranking_average_precision(graph_val_embeddings, text_val_embeddings)}"
-    )
+    print(f"Validation LRAP: {validation_lrap}")
 
     # ----  test inference  ----
 
