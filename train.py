@@ -10,13 +10,13 @@ import torch
 import numpy as np
 from tqdm import tqdm
 from transformers import AutoTokenizer
-from torch_geometric.data import DataLoader
+from torch_geometric.loader import DataLoader
 from yaml import safe_load
 
 # Local application/library specific imports
 from src.constants import *
-# from src.dataset import GraphTextDataset
-from src.dataloader import GraphTextDataset
+from src.dataset import GraphTextDataset
+# from src.dataloader import GraphTextDataset
 from src.loss import contrastive_loss
 from src.model import Model
 
