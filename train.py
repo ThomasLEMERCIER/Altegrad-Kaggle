@@ -61,6 +61,9 @@ if __name__ == "__main__":
     gt = np.load(GT_PATH, allow_pickle=True)[()]
     tokenizer = AutoTokenizer.from_pretrained(model_name)
 
+    if tokenizer.pad_token_id is None:
+        tokenizer.add_special_tokens({"pad_token": "[PAD]"})
+
     print("Loading datasets")
     loading_time = time.time()
     train_dataset = GraphTextDataset(
