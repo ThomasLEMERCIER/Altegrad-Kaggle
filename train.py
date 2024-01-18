@@ -109,12 +109,12 @@ if __name__ == "__main__":
 
     print("Loading datasets")
     loading_time = time.time()
-    train_dataset = GraphTextDataset(root=root, gt=gt, split="train", tokenizer=tokenizer, nlp_model=model_name, in_memory=False)
-    val_dataset = GraphTextDataset(root=root, gt=gt, split="val", tokenizer=tokenizer, nlp_model=model_name, in_memory=False)
+    train_dataset = GraphTextDataset(root=root, gt=gt, split="train", tokenizer=tokenizer, nlp_model=model_name, in_memory=True)
+    val_dataset = GraphTextDataset(root=root, gt=gt, split="val", tokenizer=tokenizer, nlp_model=model_name, in_memory=True)
     print("Loading time: ", time.time() - loading_time)
 
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=2)
-    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=True, num_workers=2)
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=1)
+    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=True, num_workers=1)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
