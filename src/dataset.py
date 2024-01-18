@@ -58,10 +58,10 @@ class GraphTextDataset(Dataset):
         data = Data(x=x, edge_index=edge_index, input_ids=input_ids, attention_mask=attention_mask)
         torch.save(data, osp.join(self.preprocessed_dir, 'data_{}.pt'.format(cid)))
 
-    def __len__(self):
+    def len(self):
         return len(self.cids)
     
-    def __getitem__(self, idx):
+    def get(self, idx):
         if self.in_memory:
             return self.data[idx]
         else:
