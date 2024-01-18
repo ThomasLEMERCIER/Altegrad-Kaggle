@@ -40,6 +40,7 @@ class GraphTextDataset(Dataset):
         super(GraphTextDataset, self).__init__()
 
     def preprocess(self):
+        os.environ['TOKENIZERS_PARALLELISM'] = 'false'
         num_workers = os.cpu_count()
         with ThreadPoolExecutor(max_workers=num_workers) as executor:
             futures = []
@@ -51,6 +52,7 @@ class GraphTextDataset(Dataset):
             # Wait for all futures to complete
             for future in tqdm(futures, desc='Processing Complete', total=len(futures)):
                 future.result()
+        os.environ['TOKENIZERS_PARALLELISM'] = 'true'
 
     def process_single(self, cid):
         raw_path = osp.join(self.root, 'raw', str(cid) + '.graph')
