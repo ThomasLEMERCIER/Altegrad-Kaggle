@@ -2,11 +2,13 @@ import torch
 from tqdm import tqdm
 from src.constants import *
 from src.loss import contrastive_loss
+import numpy as np
 
 
 def train_epoch(train_loader, device, model, optimizer):
     model.train()
     total_loss = 0
+
     for batch in tqdm(train_loader, desc="Training"):
         input_ids = batch.input_ids
         attention_mask = batch.attention_mask
@@ -30,12 +32,14 @@ def train_epoch(train_loader, device, model, optimizer):
         optimizer.step()
 
     average_loss = total_loss / len(train_loader)
+
     return average_loss
 
 
 def validation_epoch(val_loader, device, model):
     model.eval()
     total_loss = 0
+
     with torch.no_grad():
         for batch in tqdm(val_loader, desc="Validation"):
             input_ids = batch.input_ids
@@ -55,4 +59,30 @@ def validation_epoch(val_loader, device, model):
             total_loss += loss.item()
 
     average_loss = total_loss / len(val_loader)
+
     return average_loss
+
+
+def text_inference(text_dataloader, device, text_model):
+    text_embeddings = []
+
+    with torch.no_grad():
+        for batch in tqdm(text_dataloader):
+            input_ids = batch["input_ids"].to(device)
+            attention_mask = batch["attention_mask"].to(device)
+
+            x_text = text_model(input_ids, attention_mask=attention_mask)
+            text_embeddings.append(x_text.cpu().numpy())
+
+    return np.concatenate(text_embeddings)
+
+
+def graph_inference(graph_dataloader, device, graph_model):
+    graph_embeddings = []
+
+    with torch.no_grad():
+        for batch in tqdm(graph_dataloader):
+            x_graph = graph_model(batch.to(device))
+            graph_embeddings.append(x_graph.cpu().numpy())
+
+    return np.concatenate(graph_embeddings)
