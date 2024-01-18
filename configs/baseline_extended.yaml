@@ -1,0 +1,12 @@
+name: baseline_extended
+
+nb_epochs: 10
+batch_size: 64
+lr: 2.e-5
+weight_decay: 0.01
+
+gnn_hdim: 300
+mlp_hdim: 300
+
+nout: 768
+model_name: distilbert-base-uncased
