@@ -1,4 +1,7 @@
+import numpy as np
 import torch
+from sklearn.metrics import label_ranking_average_precision_score
+from sklearn.metrics.pairwise import cosine_similarity
 from tqdm import tqdm
 
 from src.constants import *
@@ -36,10 +39,19 @@ def train_epoch(train_loader, device, model, optimizer):
     return average_loss
 
 
+def label_ranking_average_precision(text_emeddings, graph_embeddings):
+    similarities = cosine_similarity(text_emeddings, graph_embeddings)
+    ground_truth = np.eye(similarities.shape[0])
+
+    return label_ranking_average_precision_score(ground_truth, similarities)
+
+
 def validation_epoch(val_loader, device, model):
     model.eval()
     total_loss = 0
 
+    text_embeddings_list = []
+    graph_embeddings_list = []
     with torch.no_grad():
         for batch in tqdm(val_loader, desc="Validation"):
             input_ids = batch.input_ids
@@ -58,6 +70,12 @@ def validation_epoch(val_loader, device, model):
             loss = contrastive_loss(graph_embeddings, text_embeddings)
             total_loss += loss.item()
 
-    average_loss = total_loss / len(val_loader)
+            text_embeddings_list.append(text_embeddings.cpu().numpy())
+            graph_embeddings_list.append(graph_embeddings.cpu().numpy())
 
-    return average_loss
+    average_loss = total_loss / len(val_loader)
+    text_embeddings = np.concatenate(text_embeddings_list)
+    graph_embeddings = np.concatenate(graph_embeddings_list)
+    lrap = label_ranking_average_precision(text_embeddings, graph_embeddings)
+
+    return average_loss, lrap
