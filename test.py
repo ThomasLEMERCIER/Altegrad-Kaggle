@@ -16,11 +16,13 @@ from yaml import safe_load
 from src.constants import *
 from src.dataset import GraphTextDataset
 from src.model import Model
-from src.training import train_epoch, validation_epoch
+from src.training import validation_epoch
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", default="baseline.yaml", help="Name of config file")
+    parser.add_argument("--weights", required=True, help="Path to weights")
 
     args = parser.parse_args()
     config_path = osp.join("configs", args.config)
@@ -49,8 +51,6 @@ if __name__ == "__main__":
         format="%(asctime)s %(message)s",
         datefmt="%m/%d/%Y %I:%M:%S %p",
     )
-
-    logging.info(f"Run name: {run_name}")
 
     root = ROOT_DATA
     gt = np.load(GT_PATH, allow_pickle=True)[()]
@@ -91,37 +91,11 @@ if __name__ == "__main__":
         nout=nout,
         nhid=mlp_hdim,
         graph_hidden_channels=gnn_hdim,
-    ).to(device)
-
-    optimizer = torch.optim.AdamW(
-        model.parameters(),
-        lr=lr,
-        betas=(0.9, 0.999),
-        weight_decay=weight_decay,
     )
 
-    best_validation = np.inf
+    model.load_state_dict(torch.load(args.weights))
+    model.to(device)
 
-    for e in range(1, nb_epochs + 1):
-        print("----- EPOCH {} -----".format(e))
-        trainning_loss = train_epoch(train_loader, device, model, optimizer)
-        validation_loss = validation_epoch(val_loader, device, model)
+    validation_loss = validation_epoch(val_loader, device, model)
 
-        logging.info(
-            f"Epoch {e}: Training loss: {trainning_loss}, Validation loss: {validation_loss}"
-        )
-
-        if validation_loss < best_validation:
-            best_validation = validation_loss
-            checkpoint = {
-                "model_state_dict": model.state_dict(),
-                "optimizer_state_dict": optimizer.state_dict(),
-                "best_validation": best_validation,
-                "epoch": e,
-                "validation_loss": validation_loss,
-                "training_loss": trainning_loss,
-            }
-            save_path = osp.join(checkpoint_path, f"checkpoint_{e}.pt")
-            torch.save(checkpoint, save_path)
-
-    logging.info(f"Best validation loss: {best_validation}")
+    logging.info(f"Validation loss: {validation_loss}")
