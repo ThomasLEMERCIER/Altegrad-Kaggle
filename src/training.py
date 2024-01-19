@@ -9,7 +9,7 @@ from src.constants import *
 from src.loss import contrastive_loss
 
 
-def train_epoch(train_loader, device, model, optimizer, wandb):
+def train_epoch(train_loader, device, model, optimizer, do_wandb):
     model.train()
     total_loss = 0
 
@@ -35,7 +35,7 @@ def train_epoch(train_loader, device, model, optimizer, wandb):
         loss.backward()
         optimizer.step()
 
-        if wandb:
+        if do_wandb:
             wandb.log({"training_loss_step": loss.item()})
 
     average_loss = total_loss / len(train_loader)

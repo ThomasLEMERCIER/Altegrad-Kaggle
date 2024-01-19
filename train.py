@@ -60,7 +60,7 @@ if __name__ == "__main__":
     logging.info(f"Run name: {run_name}")
 
     if args.wandb:
-        wandb.init(project="experiments-logging", name=run_name)
+        wandb.init(project="Deep Node", name=run_name)
         wandb.config.update(config)
 
     root = ROOT_DATA
