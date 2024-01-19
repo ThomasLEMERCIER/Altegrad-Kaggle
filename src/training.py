@@ -9,7 +9,7 @@ from src.constants import *
 from src.loss import contrastive_loss
 
 
-def train_epoch(train_loader, device, model, optimizer, do_wandb):
+def train_epoch(train_loader, device, model, optimizer, do_wandb, norm_loss):
     model.train()
     total_loss = 0
 
@@ -29,7 +29,7 @@ def train_epoch(train_loader, device, model, optimizer, do_wandb):
         graph_embeddings, text_embeddings = model(
             graph_batch, input_ids, attention_mask
         )
-        loss = contrastive_loss(graph_embeddings, text_embeddings)
+        loss = contrastive_loss(graph_embeddings, text_embeddings, normalize=norm_loss)
         total_loss += loss.item()
 
         loss.backward()
@@ -50,7 +50,7 @@ def label_ranking_average_precision(text_emeddings, graph_embeddings):
     return label_ranking_average_precision_score(ground_truth, similarities)
 
 
-def validation_epoch(val_loader, device, model):
+def validation_epoch(val_loader, device, model, norm_loss):
     model.eval()
     total_loss = 0
 
@@ -71,7 +71,7 @@ def validation_epoch(val_loader, device, model):
             graph_embeddings, text_embeddings = model(
                 graph_batch, input_ids, attention_mask
             )
-            loss = contrastive_loss(graph_embeddings, text_embeddings)
+            loss = contrastive_loss(graph_embeddings, text_embeddings, normalize=norm_loss)
             total_loss += loss.item()
 
             text_embeddings_list.append(text_embeddings.cpu().numpy())

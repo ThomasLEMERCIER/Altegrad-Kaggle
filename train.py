@@ -47,6 +47,8 @@ if __name__ == "__main__":
         run_name += "_finetune"
         checkpoint_name = config["checkpoint_name"]
 
+    norm_loss = config.get("norm_loss", False)
+
     checkpoint_path = osp.join("checkpoints", run_name)
     if not osp.exists(checkpoint_path):
         os.makedirs(checkpoint_path)
@@ -134,8 +136,8 @@ if __name__ == "__main__":
 
     for e in range(start_epoch, start_epoch + nb_epochs):
         print("----- EPOCH {} -----".format(e))
-        trainning_loss = train_epoch(train_loader, device, model, optimizer, args.wandb)
-        validation_loss, validation_lrap = validation_epoch(val_loader, device, model)
+        trainning_loss = train_epoch(train_loader, device, model, optimizer, args.wandb, norm_loss)
+        validation_loss, validation_lrap = validation_epoch(val_loader, device, model, norm_loss)
 
         if args.wandb:
             wandb.log(
