@@ -135,7 +135,7 @@ if __name__ == "__main__":
     for e in range(start_epoch, start_epoch + nb_epochs):
         print("----- EPOCH {} -----".format(e))
         trainning_loss = train_epoch(train_loader, device, model, optimizer, args.wandb)
-        validation_loss, validation_lrap = validation_epoch(val_loader, device, model, args.wandb)
+        validation_loss, validation_lrap = validation_epoch(val_loader, device, model)
 
         if args.wandb:
             wandb.log(
