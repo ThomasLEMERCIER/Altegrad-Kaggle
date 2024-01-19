@@ -29,7 +29,7 @@ if __name__ == "__main__":
     config_path = osp.join("configs", args.config)
     config = safe_load(open(config_path, "r"))
 
-    run_name = config["name"]
+    run_name = config["name"] + "_(" + datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + ")"
 
     model_name = config["model_name"]
     batch_size = config["batch_size"]
@@ -64,7 +64,7 @@ if __name__ == "__main__":
         wandb.init(
             entity="thomas_l",
             project="Deep Node",
-            name=run_name + datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S'),
+            name=run_name,
         )
         wandb.config.update(config)
 
