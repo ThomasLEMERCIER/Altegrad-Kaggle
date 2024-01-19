@@ -1,6 +1,7 @@
 # Specific
 data/
 checkpoints/
+wandb/
 submission.csv
 
 # Byte-compiled / optimized / DLL files

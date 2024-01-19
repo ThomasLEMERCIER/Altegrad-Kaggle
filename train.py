@@ -3,10 +3,12 @@ import os
 import time
 import logging
 import argparse
+import datetime
 import os.path as osp
 
 # Related third-party imports
 import torch
+import wandb
 import numpy as np
 from transformers import AutoTokenizer
 from torch_geometric.loader import DataLoader
@@ -21,12 +23,13 @@ from src.training import train_epoch, validation_epoch
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", default="baseline.yaml", help="Name of config file")
+    parser.add_argument("--wandb", action="store_true", help="Use wandb")
 
     args = parser.parse_args()
     config_path = osp.join("configs", args.config)
     config = safe_load(open(config_path, "r"))
 
-    run_name = config["name"]
+    run_name = config["name"] + "_(" + datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + ")"
 
     model_name = config["model_name"]
     batch_size = config["batch_size"]
@@ -56,6 +59,14 @@ if __name__ == "__main__":
     )
 
     logging.info(f"Run name: {run_name}")
+
+    if args.wandb:
+        wandb.init(
+            entity="thomas_l",
+            project="Deep Node",
+            name=run_name,
+        )
+        wandb.config.update(config)
 
     root = ROOT_DATA
     gt = np.load(GT_PATH, allow_pickle=True)[()]
@@ -123,8 +134,17 @@ if __name__ == "__main__":
 
     for e in range(start_epoch, start_epoch + nb_epochs):
         print("----- EPOCH {} -----".format(e))
-        trainning_loss = train_epoch(train_loader, device, model, optimizer)
+        trainning_loss = train_epoch(train_loader, device, model, optimizer, args.wandb)
         validation_loss, validation_lrap = validation_epoch(val_loader, device, model)
+
+        if args.wandb:
+            wandb.log(
+                {
+                    "training_loss": trainning_loss,
+                    "validation_loss": validation_loss,
+                    "validation_lrap": validation_lrap,
+                }
+            )
 
         logging.info(
             f"Epoch {e}: Training loss: {trainning_loss}, Validation loss, LRAP: {validation_loss}, {validation_lrap}"

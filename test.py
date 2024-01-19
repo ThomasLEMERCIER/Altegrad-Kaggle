@@ -122,4 +122,4 @@ if __name__ == "__main__":
     solution = pd.DataFrame(similarity)
     solution["ID"] = solution.index
     solution = solution[["ID"] + [col for col in solution.columns if col != "ID"]]
-    solution.to_csv("test_submission.csv", index=False)
+    solution.to_csv("submission.csv", index=False)
