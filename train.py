@@ -3,6 +3,7 @@ import os
 import time
 import logging
 import argparse
+import datetime
 import os.path as osp
 
 # Related third-party imports
@@ -60,7 +61,11 @@ if __name__ == "__main__":
     logging.info(f"Run name: {run_name}")
 
     if args.wandb:
-        wandb.init(project="Deep Node", name=run_name)
+        wandb.init(
+            entity="thomas_l",
+            project="Deep Node",
+            name=run_name + datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S'),
+        )
         wandb.config.update(config)
 
     root = ROOT_DATA
