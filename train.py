@@ -1,17 +1,17 @@
 # Standard library imports
-import os
-import time
-import logging
 import argparse
 import datetime
+import logging
+import os
 import os.path as osp
+import time
 
+import numpy as np
 # Related third-party imports
 import torch
 import wandb
-import numpy as np
-from transformers import AutoTokenizer
 from torch_geometric.loader import DataLoader
+from transformers import AutoTokenizer
 from yaml import safe_load
 
 # Local application/library specific imports
