@@ -1,0 +1,15 @@
+name: baseline-pretrained-nlp
+
+nb_epochs: 5
+batch_size: 32
+lr: 2.e-5
+weight_decay: 0.01
+
+gnn_hdim: 300
+mlp_hdim: 300
+
+nout: 768
+model_name: distilbert-base-uncased
+custom_tokenizer: false
+nlp_pretrained: false
+checkpoint: checkpoint-2000

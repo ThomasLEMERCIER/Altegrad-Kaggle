@@ -7,6 +7,7 @@ import os.path as osp
 import time
 
 import numpy as np
+
 # Related third-party imports
 import torch
 import wandb
@@ -29,7 +30,12 @@ if __name__ == "__main__":
     config_path = osp.join("configs", args.config)
     config = safe_load(open(config_path, "r"))
 
-    run_name = config["name"] + "_(" + datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + ")"
+    run_name = (
+        config["name"]
+        + "_("
+        + datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        + ")"
+    )
 
     model_name = config["model_name"]
     batch_size = config["batch_size"]
@@ -41,6 +47,12 @@ if __name__ == "__main__":
     mlp_hdim = config["mlp_hdim"]
 
     nout = config["nout"]
+
+    custom_tokenizer = config.get("custom_tokenizer", False)
+    nlp_pretrained = config.get("nlp_pretrained", False)
+    checkpoint = config.get("checkpoint", None)
+    if not nlp_pretrained:
+        checkpoint = None
 
     fine_tune = config.get("fine_tuning", False)
     if fine_tune:
@@ -72,7 +84,13 @@ if __name__ == "__main__":
 
     root = ROOT_DATA
     gt = np.load(GT_PATH, allow_pickle=True)[()]
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    if custom_tokenizer:
+        tokenizer_path = osp.join(
+            CHECKPOINT_FOLDER, "pretraining", model_name, "tokenizer"
+        )
+    else:
+        tokenizer_path = model_name
+    tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
 
     if tokenizer.pad_token_id is None:
         tokenizer.add_special_tokens({"pad_token": "[PAD]"})
@@ -112,6 +130,7 @@ if __name__ == "__main__":
         nout=nout,
         nhid=mlp_hdim,
         graph_hidden_channels=gnn_hdim,
+        checkpoint=checkpoint,
     ).to(device)
 
     optimizer = torch.optim.AdamW(
@@ -136,8 +155,12 @@ if __name__ == "__main__":
 
     for e in range(start_epoch, start_epoch + nb_epochs):
         print("----- EPOCH {} -----".format(e))
-        trainning_loss = train_epoch(train_loader, device, model, optimizer, args.wandb, norm_loss)
-        validation_loss, validation_lrap = validation_epoch(val_loader, device, model, norm_loss)
+        trainning_loss = train_epoch(
+            train_loader, device, model, optimizer, args.wandb, norm_loss
+        )
+        validation_loss, validation_lrap = validation_epoch(
+            val_loader, device, model, norm_loss
+        )
 
         if args.wandb:
             wandb.log(
