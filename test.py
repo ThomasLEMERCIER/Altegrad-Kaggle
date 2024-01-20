@@ -1,28 +1,26 @@
 # Standard library imports
-import os
-import time
-import logging
 import argparse
+import logging
+import os
 import os.path as osp
+import time
 
+import numpy as np
+import pandas as pd
 # Related third-party imports
 import torch
-import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
-from transformers import AutoTokenizer
-from torch_geometric.loader import DataLoader
 from torch.utils.data import DataLoader as TorchDataLoader
-import pandas as pd
-
+from torch_geometric.loader import DataLoader
+from transformers import AutoTokenizer
 from yaml import safe_load
 
 # Local application/library specific imports
 from src.constants import *
-from src.dataset import GraphTextDataset, TextDataset, GraphDataset
+from src.dataset import GraphDataset, GraphTextDataset, TextDataset
+from src.evaluation import graph_inference, text_inference
 from src.model import Model
 from src.training import validation_epoch
-from src.evaluation import text_inference, graph_inference
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

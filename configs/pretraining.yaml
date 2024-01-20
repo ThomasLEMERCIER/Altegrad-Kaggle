@@ -1,0 +1,10 @@
+name: pretraining
+
+nb_epochs: 2
+batch_size: 16
+lr: 2.e-5
+weight_decay: 0.01
+
+mask_prob: 0.15
+
+model_name: distilbert-base-uncased
