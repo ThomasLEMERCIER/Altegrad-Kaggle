@@ -62,6 +62,7 @@ if __name__ == "__main__":
         checkpoint_name = config["checkpoint_name"]
 
     norm_loss = config.get("norm_loss", False)
+    avg_pool_nlp = config.get("avg_pool_nlp", False)
 
     checkpoint_path = osp.join("checkpoints", run_name)
     if not osp.exists(checkpoint_path):
@@ -133,6 +134,7 @@ if __name__ == "__main__":
         nhid=mlp_hdim,
         graph_hidden_channels=gnn_hdim,
         checkpoint=checkpoint,
+        avg_pool_nlp=avg_pool_nlp,
     ).to(device)
 
     optimizer = torch.optim.AdamW(

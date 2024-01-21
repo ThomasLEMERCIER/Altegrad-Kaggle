@@ -1,0 +1,14 @@
+name: baseline_pool
+
+nb_epochs: 10
+batch_size: 64
+lr: 2.e-5
+weight_decay: 0.01
+
+gnn_hdim: 300
+mlp_hdim: 300
+
+nout: 768
+model_name: distilbert-base-uncased
+
+avg_pool_nlp: true
