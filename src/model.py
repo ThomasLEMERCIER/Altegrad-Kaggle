@@ -2,7 +2,8 @@ import torch
 from torch import nn
 from transformers import AutoModel, AutoModelForMaskedLM
 from torch_geometric.nn import GCNConv
-from torch_geometric.nn import global_mean_pool
+from torch_geometric.nn.models import GAT
+from torch_geometric.nn import global_mean_pool, SoftmaxAggregation
 
 
 class GraphEncoder(nn.Module):
@@ -31,8 +32,25 @@ class GraphEncoder(nn.Module):
         x = self.mol_hidden1(x).relu()
         x = self.mol_hidden2(x)
         return x
+    
+class GraphAttentionEncoder(nn.Module):
+    def __init__(self, num_node_features, nout, nhid, graph_hidden_channels, dropout=0, num_layers=3, beta=100, aggregation=global_mean_pool):
+        super(GraphAttentionEncoder, self).__init__()
+        self.gat = GAT(in_channels=num_node_features, hidden_channels=graph_hidden_channels, out_channels=graph_hidden_channels, num_layers=num_layers, dropout=dropout, v2=True)
+        self.aggregation = aggregation()
+        self.mol_hidden1 = nn.Linear(graph_hidden_channels, nhid)
+        self.mol_hidden2 = nn.Linear(nhid, nout)
 
-
+    def forward(self, graph_batch):
+        x = graph_batch.x
+        edge_index = graph_batch.edge_index
+        batch = graph_batch.batch
+        x = self.gat(x, edge_index)
+        x = self.aggregation(x, batch)
+        x = self.mol_hidden1(x).relu()
+        x = self.mol_hidden2(x)
+        return x
+    
 class TextEncoder(nn.Module):
     def __init__(self, model_name, checkpoint=None, avg_pool=False):
         super(TextEncoder, self).__init__()
