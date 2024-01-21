@@ -50,6 +50,7 @@ class TextEncoder(nn.Module):
         else:
             return encoded_text.last_hidden_state[:, 0, :]
 
+
 class Model(nn.Module):
     def __init__(
         self,

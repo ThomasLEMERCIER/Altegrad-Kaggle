@@ -53,6 +53,8 @@ if __name__ == "__main__":
     checkpoint = config.get("checkpoint", None)
     if not nlp_pretrained:
         checkpoint = None
+    else:
+        checkpoint = osp.join(CHECKPOINT_FOLDER, "pretraining", model_name, checkpoint)
 
     fine_tune = config.get("fine_tuning", False)
     if fine_tune:
