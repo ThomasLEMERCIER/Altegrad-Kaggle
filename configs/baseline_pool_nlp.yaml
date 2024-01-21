@@ -1,4 +1,4 @@
-name: baseline_norm
+name: baseline_pool
 
 nb_epochs: 10
 batch_size: 64
