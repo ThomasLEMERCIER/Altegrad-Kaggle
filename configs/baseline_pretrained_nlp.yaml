@@ -10,6 +10,6 @@ mlp_hdim: 300
 
 nout: 768
 model_name: distilbert-base-uncased
-custom_tokenizer: false
-nlp_pretrained: false
-checkpoint: checkpoint-2000
+custom_tokenizer: true
+nlp_pretrained: true
+checkpoint: checkpoint-7500
