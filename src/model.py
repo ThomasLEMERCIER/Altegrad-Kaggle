@@ -1,54 +1,47 @@
 import torch
 from torch import nn
 from transformers import AutoModel, AutoModelForMaskedLM
-from torch_geometric.nn import GCNConv
-from torch_geometric.nn.models import GAT
+from torch_geometric.nn.models import GAT, GCN
 from torch_geometric.nn import global_mean_pool, SoftmaxAggregation
+    
+class GraphAttentionNetwork(nn.Module):
+    def __init__(self, num_node_features, graph_hidden_channels, num_layers, dropout):
+        super(GraphAttentionNetwork, self).__init__()
+        self.gat = GAT(in_channels=num_node_features, hidden_channels=graph_hidden_channels, out_channels=graph_hidden_channels, num_layers=num_layers, dropout=dropout, v2=True, norm="GraphNorm")
 
+    def forward(self, x, edge_index):
+        return self.gat(x, edge_index)
+
+class GraphConvolutionalNetwork(nn.Module):
+    def __init__(self, num_node_features, graph_hidden_channels, num_layers, dropout):
+        super(GraphConvolutionalNetwork, self).__init__()
+        self.gcn = GCN(in_channels=num_node_features, hidden_channels=graph_hidden_channels, out_channels=graph_hidden_channels, num_layers=num_layers, dropout=dropout, norm="GraphNorm")
+    def forward(self, x, edge_index):
+        return self.gcn(x, edge_index)
+    
+GNN_MODELS = {
+    "gat": GraphAttentionNetwork,
+    "gcn": GraphConvolutionalNetwork
+}
 
 class GraphEncoder(nn.Module):
-    def __init__(self, num_node_features, nout, nhid, graph_hidden_channels):
+    def __init__(self, model_name, num_node_features, graph_hidden_channels, nhid, nout, dropout=0, num_layers=3):
         super(GraphEncoder, self).__init__()
-        self.nhid = nhid
-        self.nout = nout
-        self.relu = nn.ReLU()
-        self.ln = nn.LayerNorm((nout))
-        self.conv1 = GCNConv(num_node_features, graph_hidden_channels)
-        self.conv2 = GCNConv(graph_hidden_channels, graph_hidden_channels)
-        self.conv3 = GCNConv(graph_hidden_channels, graph_hidden_channels)
-        self.mol_hidden1 = nn.Linear(graph_hidden_channels, nhid)
-        self.mol_hidden2 = nn.Linear(nhid, nout)
+        self.gnn = GNN_MODELS[model_name](num_node_features, graph_hidden_channels, num_layers, dropout)
+
+        self.head = nn.Sequential(
+            nn.Linear(graph_hidden_channels, nhid),
+            nn.ReLU(),
+            nn.Linear(nhid, nout),
+        )
 
     def forward(self, graph_batch):
         x = graph_batch.x
         edge_index = graph_batch.edge_index
         batch = graph_batch.batch
-        x = self.conv1(x, edge_index)
-        x = x.relu()
-        x = self.conv2(x, edge_index)
-        x = x.relu()
-        x = self.conv3(x, edge_index)
+        x = self.gnn(x, edge_index)
         x = global_mean_pool(x, batch)
-        x = self.mol_hidden1(x).relu()
-        x = self.mol_hidden2(x)
-        return x
-    
-class GraphAttentionEncoder(nn.Module):
-    def __init__(self, num_node_features, nout, nhid, graph_hidden_channels, dropout=0, num_layers=3, beta=100, aggregation=global_mean_pool):
-        super(GraphAttentionEncoder, self).__init__()
-        self.gat = GAT(in_channels=num_node_features, hidden_channels=graph_hidden_channels, out_channels=graph_hidden_channels, num_layers=num_layers, dropout=dropout, v2=True)
-        self.aggregation = aggregation()
-        self.mol_hidden1 = nn.Linear(graph_hidden_channels, nhid)
-        self.mol_hidden2 = nn.Linear(nhid, nout)
-
-    def forward(self, graph_batch):
-        x = graph_batch.x
-        edge_index = graph_batch.edge_index
-        batch = graph_batch.batch
-        x = self.gat(x, edge_index)
-        x = self.aggregation(x, batch)
-        x = self.mol_hidden1(x).relu()
-        x = self.mol_hidden2(x)
+        x = self.head(x)
         return x
     
 class TextEncoder(nn.Module):
@@ -56,35 +49,44 @@ class TextEncoder(nn.Module):
         super(TextEncoder, self).__init__()
         self.avg_pool = avg_pool
         if checkpoint is None:
-            self.bert = AutoModel.from_pretrained(model_name)
+            self.main = AutoModel.from_pretrained(model_name)
         else:
-            self.bert = AutoModelForMaskedLM.from_pretrained(checkpoint).base_model
+            self.main = AutoModelForMaskedLM.from_pretrained(checkpoint).base_model
 
     def forward(self, input_ids, attention_mask):
-        encoded_text = self.bert(input_ids, attention_mask=attention_mask)
-        # print(encoded_text.last_hidden_state.size())
+        encoded_text = self.main(input_ids, attention_mask=attention_mask)
         if self.avg_pool:
             return torch.mean(encoded_text.last_hidden_state, dim=1)
         else:
             return encoded_text.last_hidden_state[:, 0, :]
 
-
 class Model(nn.Module):
     def __init__(
         self,
-        model_name,
+        nlp_model_name,
+        gnn_model_name,
         num_node_features,
-        nout,
-        nhid,
         graph_hidden_channels,
-        checkpoint=None,
+        nhid,
+        nout,
+        gnn_dropout=0,
+        gnn_num_layers=3,
+        nlp_checkpoint=None,
         avg_pool_nlp=False,
     ):
         super(Model, self).__init__()
+
         self.graph_encoder = GraphEncoder(
-            num_node_features, nout, nhid, graph_hidden_channels
+            model_name=gnn_model_name,
+            num_node_features=num_node_features,
+            nout=nout,
+            nhid=nhid,
+            graph_hidden_channels=graph_hidden_channels,
+            dropout=gnn_dropout,
+            num_layers=gnn_num_layers
         )
-        self.text_encoder = TextEncoder(model_name, checkpoint, avg_pool_nlp)
+        
+        self.text_encoder = TextEncoder(model_name=nlp_model_name, checkpoint=nlp_checkpoint, avg_pool=avg_pool_nlp)
 
     def forward(self, graph_batch, input_ids, attention_mask):
         graph_encoded = self.graph_encoder(graph_batch)

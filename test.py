@@ -31,6 +31,38 @@ if __name__ == "__main__":
     config_path = osp.join("configs", args.config)
     config = safe_load(open(config_path, "r"))
 
+    # ==== Nlp model parameters ==== #
+    nlp_model_name = config["nlp_model_name"]
+    custom_tokenizer = config.get("custom_tokenizer", False)
+    nlp_pretrained = config.get("nlp_pretrained", False)
+
+    # ==== GNN parameters ==== #
+    gnn_model_name = config["gnn_model_name"]
+    gnn_num_layers = config["gnn_num_layers"]
+    gnn_dropout = config["gnn_dropout"]
+    gnn_hdim = config["gnn_hdim"]
+    mlp_hdim = config["mlp_hdim"]
+
+    # ==== Output parameters ==== #
+    nout = config["nout"]
+
+    # ==== Training parameters ==== #
+    batch_size = config["batch_size"]
+    nb_epochs = config["nb_epochs"]
+    lr = config["lr"]
+    weight_decay = config["weight_decay"]
+
+    # ==== Loss/Model options ==== #
+    norm_loss = config.get("norm_loss", False)
+    avg_pool_nlp = config.get("avg_pool_nlp", False)
+
+    # ==== NLP checkpoint ==== #
+    nlp_checkpoint = config.get("nlp_checkpoint", None)
+    if not nlp_pretrained:
+        nlp_checkpoint = None
+    else:
+        nlp_checkpoint = osp.join(CHECKPOINT_FOLDER, "pretraining", nlp_model_name, nlp_checkpoint)
+
     run_name = config["name"]
 
     model_name = config["model_name"]
@@ -45,8 +77,6 @@ if __name__ == "__main__":
     nout = config["nout"]
 
     checkpoint_path = osp.join("checkpoints", run_name)
-    if not osp.exists(checkpoint_path):
-        os.makedirs(checkpoint_path)
 
     logging.basicConfig(
         filename=osp.join(checkpoint_path, "test.log"),
@@ -79,7 +109,7 @@ if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     model = Model(
-        model_name=model_name,
+        nlp_model_name=model_name,
         num_node_features=NODE_FEATURES_SIZE,
         nout=nout,
         nhid=mlp_hdim,

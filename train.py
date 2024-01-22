@@ -30,6 +30,7 @@ if __name__ == "__main__":
     config_path = osp.join("configs", args.config)
     config = safe_load(open(config_path, "r"))
 
+    # ==== Run name ==== #
     run_name = (
         config["name"]
         + "_("
@@ -37,44 +38,56 @@ if __name__ == "__main__":
         + ")"
     )
 
-    model_name = config["model_name"]
+    # ==== Nlp model parameters ==== #
+    nlp_model_name = config["nlp_model_name"]
+    custom_tokenizer = config.get("custom_tokenizer", False)
+    nlp_pretrained = config.get("nlp_pretrained", False)
+
+    # ==== GNN parameters ==== #
+    gnn_model_name = config["gnn_model_name"]
+    gnn_num_layers = config["gnn_num_layers"]
+    gnn_dropout = config["gnn_dropout"]
+    gnn_hdim = config["gnn_hdim"]
+    mlp_hdim = config["mlp_hdim"]
+
+    # ==== Output parameters ==== #
+    nout = config["nout"]
+
+    # ==== Training parameters ==== #
     batch_size = config["batch_size"]
     nb_epochs = config["nb_epochs"]
     lr = config["lr"]
     weight_decay = config["weight_decay"]
 
-    gnn_hdim = config["gnn_hdim"]
-    mlp_hdim = config["mlp_hdim"]
+    # ==== Loss/Model options ==== #
+    norm_loss = config.get("norm_loss", False)
+    avg_pool_nlp = config.get("avg_pool_nlp", False)
 
-    nout = config["nout"]
-
-    custom_tokenizer = config.get("custom_tokenizer", False)
-    nlp_pretrained = config.get("nlp_pretrained", False)
-    checkpoint = config.get("checkpoint", None)
+    # ==== NLP checkpoint ==== #
+    nlp_checkpoint = config.get("nlp_checkpoint", None)
     if not nlp_pretrained:
-        checkpoint = None
+        nlp_checkpoint = None
     else:
-        checkpoint = osp.join(CHECKPOINT_FOLDER, "pretraining", model_name, checkpoint)
+        nlp_checkpoint = osp.join(CHECKPOINT_FOLDER, "pretraining", nlp_model_name, nlp_checkpoint)
 
+    # ==== Fine tuning ==== #
     fine_tune = config.get("fine_tuning", False)
     if fine_tune:
         run_name += "_finetune"
         checkpoint_name = config["checkpoint_name"]
 
-    norm_loss = config.get("norm_loss", False)
-    avg_pool_nlp = config.get("avg_pool_nlp", False)
-
+    # ==== Checkpoint ==== #
     checkpoint_path = osp.join("checkpoints", run_name)
     if not osp.exists(checkpoint_path):
         os.makedirs(checkpoint_path)
 
+    # ==== Logging ==== #
     logging.basicConfig(
         filename=osp.join(checkpoint_path, "train.log"),
         level=logging.INFO,
         format="%(asctime)s %(message)s",
         datefmt="%m/%d/%Y %I:%M:%S %p",
     )
-
     logging.info(f"Run name: {run_name}")
 
     if args.wandb:
@@ -85,14 +98,15 @@ if __name__ == "__main__":
         )
         wandb.config.update(config)
 
+    # ==== Data ==== #
     root = ROOT_DATA
     gt = np.load(GT_PATH, allow_pickle=True)[()]
     if custom_tokenizer:
         tokenizer_path = osp.join(
-            CHECKPOINT_FOLDER, "pretraining", model_name, "tokenizer"
+            CHECKPOINT_FOLDER, "pretraining", nlp_model_name, "tokenizer"
         )
     else:
-        tokenizer_path = model_name
+        tokenizer_path = nlp_model_name
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
 
     if tokenizer.pad_token_id is None:
@@ -105,7 +119,7 @@ if __name__ == "__main__":
         gt=gt,
         split="train",
         tokenizer=tokenizer,
-        nlp_model=model_name,
+        nlp_model=nlp_model_name,
         in_memory=True,
     )
     val_dataset = GraphTextDataset(
@@ -113,7 +127,7 @@ if __name__ == "__main__":
         gt=gt,
         split="val",
         tokenizer=tokenizer,
-        nlp_model=model_name,
+        nlp_model=nlp_model_name,
         in_memory=True,
     )
     print("Loading time: ", time.time() - loading_time)
@@ -125,18 +139,24 @@ if __name__ == "__main__":
         val_dataset, batch_size=batch_size, shuffle=True, num_workers=1
     )
 
+    # ==== Device ==== #
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+    # ==== Model ==== #
     model = Model(
-        model_name=model_name,
+        nlp_model_name=nlp_model_name,
+        gnn_model_name=gnn_model_name,
         num_node_features=NODE_FEATURES_SIZE,
-        nout=nout,
-        nhid=mlp_hdim,
         graph_hidden_channels=gnn_hdim,
-        checkpoint=checkpoint,
+        nhid=mlp_hdim,
+        nout=nout,
+        gnn_dropout=gnn_dropout,
+        gnn_num_layers=gnn_num_layers,
+        nlp_checkpoint=nlp_checkpoint,
         avg_pool_nlp=avg_pool_nlp,
     ).to(device)
 
+    # ==== Optimizer ==== #
     optimizer = torch.optim.AdamW(
         model.parameters(),
         lr=lr,
@@ -148,11 +168,11 @@ if __name__ == "__main__":
     start_epoch = 1
 
     if fine_tune:
-        checkpoint = torch.load(osp.join("checkpoints", checkpoint_name))
-        model.load_state_dict(checkpoint["model_state_dict"])
-        optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
-        best_validation = checkpoint["best_validation"]
-        start_epoch = checkpoint["epoch"] + 1
+        nlp_checkpoint = torch.load(osp.join("checkpoints", checkpoint_name))
+        model.load_state_dict(nlp_checkpoint["model_state_dict"])
+        optimizer.load_state_dict(nlp_checkpoint["optimizer_state_dict"])
+        best_validation = nlp_checkpoint["best_validation"]
+        start_epoch = nlp_checkpoint["epoch"] + 1
         print("Loaded checkpoint: ", checkpoint_name)
         print("Best validation loss: ", best_validation)
         print("Starting from epoch: ", start_epoch)
@@ -181,7 +201,7 @@ if __name__ == "__main__":
 
         if validation_loss < best_validation:
             best_validation = validation_loss
-            checkpoint = {
+            nlp_checkpoint = {
                 "model_state_dict": model.state_dict(),
                 "optimizer_state_dict": optimizer.state_dict(),
                 "best_validation": best_validation,
@@ -190,6 +210,6 @@ if __name__ == "__main__":
                 "training_loss": trainning_loss,
             }
             save_path = osp.join(checkpoint_path, f"checkpoint_{e}.pt")
-            torch.save(checkpoint, save_path)
+            torch.save(nlp_checkpoint, save_path)
 
     logging.info(f"Best validation loss: {best_validation}")
