@@ -24,9 +24,6 @@ def edge_pertubation(x, edge_index, p):
     
     returns: perturbed edge index i.e. for an adjacency matrix A, A' = A XOR E, E bernoulli random variable matrix
     """
-    # check if the graph has enough nodes
-    if x.shape[0] < 2:
-        return x, edge_index
     edge_index, _ = tg_utils.dropout_edge(edge_index, p=p, force_undirected=True)
     edge_index, _ = tg_utils.add_random_edge(edge_index, p=p, force_undirected=True, num_nodes=x.shape[0])
     return x, edge_index
@@ -80,15 +77,16 @@ def random_graph_data_aug(x, edge_index, params: GraphDataAugParams):
     p_features_shuffling: probability of shuffling features
     p_features_masking: probability of masking a feature
     """
-
-    # Edge pertubation
-    if params.p_edge_pertubation > 0:
-        x, edge_index = edge_pertubation(x, edge_index, params.p_edge_pertubation)
-    
-    # Graph sampling
-    if params.p_graph_sampling > 0:
-        x, edge_index = graph_sampling(x, edge_index, params.p_graph_sampling)
-    
+    # Only do graph data augmentation if the graph has enough nodes
+    if x.shape[0] > 5:
+        # Edge pertubation
+        if params.p_edge_pertubation > 0:
+            x, edge_index = edge_pertubation(x, edge_index, params.p_edge_pertubation)
+        
+        # Graph sampling
+        if params.p_graph_sampling > 0:
+            x, edge_index = graph_sampling(x, edge_index, params.p_graph_sampling)
+  
     # Features corruption
     if params.features_noise > 0:
         x, edge_index = features_corruption(x, edge_index, params.features_noise)
