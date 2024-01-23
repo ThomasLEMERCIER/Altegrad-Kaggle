@@ -32,3 +32,7 @@ nlp_checkpoint: null
 # ==== Fine tuning ==== #
 fine_tuning: true
 checkpoint_name: baseline_extended/checkpoint_8.pt
+
+# ==== Scheduler ==== #
+scheduler: constant
+eta_min: 5.e-6
