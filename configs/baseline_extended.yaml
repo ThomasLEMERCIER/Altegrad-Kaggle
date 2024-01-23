@@ -1,12 +1,34 @@
+# ==== Run name ==== #
 name: baseline_extended
 
+# ==== Nlp model parameters ==== #
+nlp_model_name: distilbert-base-uncased
+custom_tokenizer: False
+nlp_pretrained: False
+
+# ==== GNN parameters ==== #
+gnn_model_name: gcn
+gnn_num_layers: 3
+gnn_hdim: 300
+mlp_hdim: 300
+gnn_dropout: 0.
+
+# ==== Output parameters ==== #
+nout: 768
+
+# ==== Training parameters ==== #
 nb_epochs: 10
 batch_size: 64
 lr: 2.e-5
 weight_decay: 0.01
 
-gnn_hdim: 300
-mlp_hdim: 300
+# ==== Loss/Model options ==== #
+norm_loss: False
+avg_pool_nlp: False
 
-nout: 768
-model_name: distilbert-base-uncased
+# ==== NLP checkpoint ==== #
+nlp_checkpoint: null
+
+# ==== Fine tuning ==== #
+fine_tuning: False
+checkpoint_name: null

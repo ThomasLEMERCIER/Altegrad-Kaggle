@@ -1,20 +1,18 @@
 # Standard library imports
 import os
-from concurrent.futures import ThreadPoolExecutor
 import os.path as osp
+from concurrent.futures import ThreadPoolExecutor
 
 # Related third-party imports
 import torch
-from torch_geometric.data import Dataset
 from tqdm import tqdm
 import pandas as pd
 from torch_geometric.data import Data
+from torch_geometric.data import Dataset
 from torch.utils.data import Dataset as TorchDataset
-
 
 # Local application/library specific imports
 from src.preprocessing import process_graph, process_text
-
 
 class GraphTextDataset(Dataset):
     """

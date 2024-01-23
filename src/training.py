@@ -1,10 +1,12 @@
-import numpy as np
+# Related third-party imports
 import torch
 import wandb
+import numpy as np
+from tqdm import tqdm
 from sklearn.metrics import label_ranking_average_precision_score
 from sklearn.metrics.pairwise import cosine_similarity
-from tqdm import tqdm
 
+# Local application/library specific imports
 from src.constants import *
 from src.loss import contrastive_loss
 

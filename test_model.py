@@ -1,4 +1,3 @@
-
 from transformers import AutoModel, AutoTokenizer
 
 text = "UDP-alpha-D-galactofuranose(2-) is a UDP-D-galactofuranose(2-) in which the anomeric centre of the galactofuranose moiety has alpha-configuration. It is a conjugate base of an UDP-alpha-D-galactofuranose."
