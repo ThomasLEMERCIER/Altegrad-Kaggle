@@ -38,7 +38,7 @@ def train_epoch(train_loader, device, model, optimizer, do_wandb, norm_loss):
         optimizer.step()
 
         if do_wandb:
-            wandb.log({"training_loss_step": loss.item()})
+            wandb.log({"training_loss_step": loss.item(), "lr": optimizer.param_groups[0]["lr"]})
 
     average_loss = total_loss / len(train_loader)
 
