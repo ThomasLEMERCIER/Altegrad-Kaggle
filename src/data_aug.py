@@ -24,6 +24,8 @@ def edge_pertubation(x, edge_index, p):
     
     returns: perturbed edge index i.e. for an adjacency matrix A, A' = A XOR E, E bernoulli random variable matrix
     """
+    if round(edge_index.shape[1] * p) < 2:
+        return x, edge_index 
     edge_index, _ = tg_utils.dropout_edge(edge_index, p=p, force_undirected=True)
     edge_index, _ = tg_utils.add_random_edge(edge_index, p=p, force_undirected=True, num_nodes=x.shape[0])
     return x, edge_index
@@ -77,28 +79,27 @@ def random_graph_data_aug(x, edge_index, params: GraphDataAugParams):
     p_features_shuffling: probability of shuffling features
     p_features_masking: probability of masking a feature
     """
-    # # Only do graph data augmentation if the graph has enough nodes
-    # if x.shape[0] > 10:
-    #     # Edge pertubation
-    #     if params.p_edge_pertubation > 0:
-    #         x, edge_index = edge_pertubation(x, edge_index, params.p_edge_pertubation)
-        
-    #     # Graph sampling
-    #     if params.p_graph_sampling > 0:
-    #         x, edge_index = graph_sampling(x, edge_index, params.p_graph_sampling)
+
+    # Edge pertubation
+    if params.p_edge_pertubation > 0:
+        x, edge_index = edge_pertubation(x, edge_index, params.p_edge_pertubation)
+    
+    # Graph sampling
+    if params.p_graph_sampling > 0:
+        x, edge_index = graph_sampling(x, edge_index, params.p_graph_sampling)
   
-    # # Features corruption
-    # if params.features_noise > 0:
-    #     x, edge_index = features_corruption(x, edge_index, params.features_noise)
+    # Features corruption
+    if params.features_noise > 0:
+        x, edge_index = features_corruption(x, edge_index, params.features_noise)
     
-    # # Features shuffling
-    # if params.p_features_shuffling > 0:
-    #     if random.random() < params.p_features_shuffling:
-    #         x, edge_index = features_shuffling(x, edge_index)
+    # Features shuffling
+    if params.p_features_shuffling > 0:
+        if random.random() < params.p_features_shuffling:
+            x, edge_index = features_shuffling(x, edge_index)
     
-    # # Features masking
-    # if params.p_features_masking > 0:
-    #     x, edge_index = features_masking(x, edge_index, params.p_features_masking)
+    # Features masking
+    if params.p_features_masking > 0:
+        x, edge_index = features_masking(x, edge_index, params.p_features_masking)
 
     # Add any missing self loops
     edge_index, _ = tg_utils.remove_self_loops(edge_index)
