@@ -42,7 +42,7 @@ def train_epoch(train_loader, device, model, optimizer, scheduler, epoch, do_wan
         optimizer.step()
 
         if do_wandb:
-            wandb.log({"training_loss_step": loss.item()})
+            wandb.log({"training_loss_step": loss.item(), "lr": scheduler[itx]})
 
     average_loss = total_loss / len(train_loader)
 
