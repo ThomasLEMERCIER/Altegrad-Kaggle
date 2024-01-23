@@ -89,7 +89,7 @@ if __name__ == "__main__":
 
     if  config["fine_tuning"]:
         checkpoint_path = osp.join(CHECKPOINT_FOLDER, config["checkpoint_name"])
-        model, optimizer, best_validation, start_epoch = load_checkpoint(
+        model, optimizer, start_epoch = load_checkpoint(
             model, optimizer, checkpoint_path
         )
 
