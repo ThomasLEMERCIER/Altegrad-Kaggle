@@ -32,3 +32,11 @@ nlp_checkpoint: null
 # ==== Fine tuning ==== #
 fine_tuning: true
 checkpoint_name: baseline_extended/checkpoint_8.pt
+
+# ==== Transform ==== #
+edge_pertubation: 0.
+graph_sampling: 0.
+features_noise: 0.
+features_shuffling: 0.
+features_masking: 0.
+

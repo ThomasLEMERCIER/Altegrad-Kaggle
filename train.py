@@ -14,7 +14,7 @@ from transformers import AutoTokenizer
 # Local application/library specific imports
 from src.constants import *
 from src.training import train_epoch, validation_epoch
-from src.utils import load_checkpoint, load_config, load_model, load_optimizer, get_dataloaders, save_checkpoint
+from src.utils import load_checkpoint, load_config, load_model, load_optimizer, get_dataloaders, save_checkpoint, get_transform
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -64,6 +64,9 @@ if __name__ == "__main__":
     if tokenizer.pad_token_id is None:
         tokenizer.add_special_tokens({"pad_token": "[PAD]"})
 
+    # ==== Transform ==== #
+    transform, transform_params = get_transform(config)
+
     # ===== Dataloaders ===== #
     print("Loading datasets")
     loading_time = time.time()
@@ -71,6 +74,8 @@ if __name__ == "__main__":
         config=config,
         tokenizer=tokenizer,
         only_val=False,
+        transform=transform,
+        transform_params=transform_params
     )
     print("Loading time: ", time.time() - loading_time)
     

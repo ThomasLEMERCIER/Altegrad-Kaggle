@@ -5,12 +5,13 @@ import os.path as osp
 # Related third party imports
 import torch
 import numpy as np
+from torch_geometric.loader import DataLoader
 
 # Local application/library specific imports
 from .model import Model
 from .dataset import GraphTextDataset
-from torch_geometric.loader import DataLoader
 from .constants import CHECKPOINT_FOLDER, NODE_FEATURES_SIZE, ROOT_DATA, GT_PATH
+from .data_aug import DataAugParams, GraphDataAugParams, random_data_aug
 
 def load_config(config_path):
     with open(config_path, "r") as f:
@@ -87,7 +88,7 @@ def save_checkpoint(model, optimizer, epoch, checkpoint_path):
         checkpoint_path,
     )
 
-def get_dataloaders(config, tokenizer, only_val=False):
+def get_dataloaders(config, tokenizer, transform=None, transform_params=None, only_val=False):
     gt = np.load(GT_PATH, allow_pickle=True)[()]
 
     if only_val:
@@ -109,6 +110,8 @@ def get_dataloaders(config, tokenizer, only_val=False):
         tokenizer=tokenizer,
         nlp_model=config["nlp_model_name"],
         in_memory=True,
+        transform=transform,
+        transform_params=transform_params
     )
     val_dataset = GraphTextDataset(
         root=ROOT_DATA,
@@ -123,3 +126,14 @@ def get_dataloaders(config, tokenizer, only_val=False):
     val_loader = DataLoader(val_dataset, batch_size=config["batch_size"], shuffle=True, num_workers=1)
 
     return train_loader, val_loader
+
+def get_transform(config):
+    g_paramrs = GraphDataAugParams(
+        p_edge_pertubation=config["edge_pertubation"],
+        p_graph_sampling=config["graph_sampling"],
+        features_noise=config["features_noise"],
+        p_features_shuffling=config["features_shuffling"],
+        p_features_masking=config["features_masking"],
+    )
+
+    return random_data_aug, DataAugParams(graph_params=g_paramrs)
