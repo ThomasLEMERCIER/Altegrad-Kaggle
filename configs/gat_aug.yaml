@@ -1,5 +1,5 @@
 # ==== Run name ==== #
-name: gat
+name: gat_aug
 
 # ==== Nlp model parameters ==== #
 nlp_model_name: distilbert-base-uncased
