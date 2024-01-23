@@ -101,6 +101,10 @@ def random_graph_data_aug(x, edge_index, params: GraphDataAugParams):
     # Features masking
     if params.p_features_masking > 0:
         x, edge_index = features_masking(x, edge_index, params.p_features_masking)
+
+    # Add any missing self loops
+    edge_index, _ = tg_utils.remove_self_loops(edge_index)
+    edge_index, _ = tg_utils.add_self_loops(edge_index, num_nodes=x.shape[0])
     
     return x, edge_index
 
