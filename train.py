@@ -33,6 +33,7 @@ if __name__ == "__main__":
         + ")"
         + "_finetuning" if config["fine_tuning"] else ""
     )
+    print("Run name: ", run_name)
 
     # ==== Checkpoint ==== #
     checkpoint_path = osp.join(CHECKPOINT_FOLDER, run_name)
