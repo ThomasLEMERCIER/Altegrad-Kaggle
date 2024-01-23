@@ -121,4 +121,4 @@ if __name__ == "__main__":
             save_path = osp.join(checkpoint_path, f"checkpoint_{e}.pt")
             save_checkpoint(model, optimizer, e, save_path)
 
-    logging.info(f"Best validation loss: {best_validation}")
+    logging.info(f"Best validation LARP: {best_validation_larp}")
