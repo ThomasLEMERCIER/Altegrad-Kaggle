@@ -25,7 +25,7 @@ def edge_pertubation(x, edge_index, p):
     returns: perturbed edge index i.e. for an adjacency matrix A, A' = A XOR E, E bernoulli random variable matrix
     """
     edge_index, _ = tg_utils.dropout_edge(edge_index, p=p, force_undirected=True)
-    if round(edge_index.shape[1] * p) == 0:
+    if round(edge_index.shape[1] * p) < 2:
         return x, edge_index 
     edge_index, _ = tg_utils.add_random_edge(edge_index, p=p, force_undirected=True, num_nodes=x.shape[0])
     return x, edge_index
