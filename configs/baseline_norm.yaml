@@ -11,6 +11,7 @@ gnn_model_name: gcn
 gnn_num_layers: 3
 gnn_hdim: 300
 mlp_hdim: 300
+gnn_dropout: 0.
 
 # ==== Output parameters ==== #
 nout: 768
