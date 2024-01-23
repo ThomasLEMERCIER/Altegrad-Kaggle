@@ -35,9 +35,10 @@ if __name__ == "__main__":
     )
 
     # ==== Checkpoint ==== #
-    checkpoint_path = osp.join("checkpoints", run_name)
+    checkpoint_path = osp.join(CHECKPOINT_FOLDER, run_name)
     if not osp.exists(checkpoint_path):
         os.makedirs(checkpoint_path)
+    print("Checkpoint path: ", checkpoint_path)
 
     # ==== Logging ==== #
     logging.basicConfig(
