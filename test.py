@@ -79,7 +79,7 @@ if __name__ == "__main__":
     model.to(device)
     model.eval()
 
-    validation_loss, validation_lrap = validation_epoch(val_loader, device, model)
+    validation_loss, validation_lrap = validation_epoch(val_loader, device, model, config["norm_loss"])
 
     print(f"Validation loss: {validation_loss}")
     print(f"Validation LRAP: {validation_lrap}")
