@@ -1,26 +1,26 @@
 # Standard library imports
-import argparse
-import logging
 import os
-import os.path as osp
 import time
+import logging
+import argparse
+import datetime
+import os.path as osp
 
-import numpy as np
-import pandas as pd
 # Related third-party imports
 import torch
+import numpy as np
+import pandas as pd
+from transformers import AutoTokenizer
+from torch_geometric.loader import DataLoader
 from sklearn.metrics.pairwise import cosine_similarity
 from torch.utils.data import DataLoader as TorchDataLoader
-from torch_geometric.loader import DataLoader
-from transformers import AutoTokenizer
-from yaml import safe_load
 
 # Local application/library specific imports
 from src.constants import *
-from src.dataset import GraphDataset, GraphTextDataset, TextDataset
-from src.evaluation import graph_inference, text_inference
-from src.model import Model
 from src.training import validation_epoch
+from src.dataset import GraphDataset, TextDataset
+from src.evaluation import graph_inference, text_inference
+from src.utils import load_config, load_model, get_dataloaders, load_model_from_checkpoint
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -29,55 +29,21 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     config_path = osp.join("configs", args.config)
-    config = safe_load(open(config_path, "r"))
+    config = load_config(config_path)
 
-    # ==== Nlp model parameters ==== #
-    nlp_model_name = config["nlp_model_name"]
-    custom_tokenizer = config.get("custom_tokenizer", False)
-    nlp_pretrained = config.get("nlp_pretrained", False)
-
-    # ==== GNN parameters ==== #
-    gnn_model_name = config["gnn_model_name"]
-    gnn_num_layers = config["gnn_num_layers"]
-    gnn_dropout = config["gnn_dropout"]
-    gnn_hdim = config["gnn_hdim"]
-    mlp_hdim = config["mlp_hdim"]
-
-    # ==== Output parameters ==== #
-    nout = config["nout"]
-
-    # ==== Training parameters ==== #
-    batch_size = config["batch_size"]
-    nb_epochs = config["nb_epochs"]
-    lr = config["lr"]
-    weight_decay = config["weight_decay"]
-
-    # ==== Loss/Model options ==== #
-    norm_loss = config.get("norm_loss", False)
-    avg_pool_nlp = config.get("avg_pool_nlp", False)
-
-    # ==== NLP checkpoint ==== #
-    nlp_checkpoint = config.get("nlp_checkpoint", None)
-    if not nlp_pretrained:
-        nlp_checkpoint = None
-    else:
-        nlp_checkpoint = osp.join(CHECKPOINT_FOLDER, "pretraining", nlp_model_name, nlp_checkpoint)
-
-    run_name = config["name"]
-
-    model_name = config["model_name"]
-    batch_size = config["batch_size"]
-    nb_epochs = config["nb_epochs"]
-    lr = config["lr"]
-    weight_decay = config["weight_decay"]
-
-    gnn_hdim = config["gnn_hdim"]
-    mlp_hdim = config["mlp_hdim"]
-
-    nout = config["nout"]
+    run_name = (
+        config["name"]
+        + "_("
+        + datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        + ")"
+        + "_finetuning" if config["fine_tuning"] else ""
+    )
 
     checkpoint_path = osp.join("checkpoints", run_name)
+    if not osp.exists(checkpoint_path):
+        os.makedirs(checkpoint_path)
 
+    # ==== Logging ==== #
     logging.basicConfig(
         filename=osp.join(checkpoint_path, "test.log"),
         level=logging.INFO,
@@ -85,39 +51,34 @@ if __name__ == "__main__":
         datefmt="%m/%d/%Y %I:%M:%S %p",
     )
 
-    root = ROOT_DATA
-    gt = np.load(GT_PATH, allow_pickle=True)[()]
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    # ==== Tokenizer ==== #
+    if config["custom_tokenizer"]:
+        tokenizer_path = osp.join(
+            CHECKPOINT_FOLDER, "pretraining", config["nlp_model_name"], "tokenizer"
+        )
+    else:
+        tokenizer_path = config["nlp_model_name"]
+    tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
 
+    if tokenizer.pad_token_id is None:
+        tokenizer.add_special_tokens({"pad_token": "[PAD]"})
+
+    # ===== Dataloaders ===== #
     print("Loading datasets")
     loading_time = time.time()
-
-    val_dataset = GraphTextDataset(
-        root=root,
-        gt=gt,
-        split="val",
+    val_loader = get_dataloaders(
+        config=config,
         tokenizer=tokenizer,
-        nlp_model=model_name,
-        in_memory=False,
+        only_val=True,
     )
     print("Loading time: ", time.time() - loading_time)
-
-    val_loader = DataLoader(
-        val_dataset, batch_size=batch_size, shuffle=True, num_workers=1
-    )
-
+    
+    # ==== Device ==== #
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    model = Model(
-        nlp_model_name=model_name,
-        num_node_features=NODE_FEATURES_SIZE,
-        nout=nout,
-        nhid=mlp_hdim,
-        graph_hidden_channels=gnn_hdim,
-    )
-
-    checkpoint = torch.load(args.weights)
-    model.load_state_dict(checkpoint["model_state_dict"])
+    # ==== Model ==== #
+    model = load_model(config).to(device)
+    model = load_model_from_checkpoint(model, args.weights)
     model.to(device)
     model.eval()
 
@@ -126,23 +87,18 @@ if __name__ == "__main__":
     print(f"Validation loss: {validation_loss}")
     print(f"Validation LRAP: {validation_lrap}")
 
-    # ----  test inference  ----
-
+    # ====  test inference  ==== #
     graph_model = model.get_graph_encoder()
     text_model = model.get_text_encoder()
 
-    text_dataset = TextDataset(
-        root=root, test_file="test_text", tokenizer=tokenizer, nlp_model=model_name
-    )
-    text_dataloader = TorchDataLoader(
-        text_dataset, batch_size=batch_size, shuffle=False
-    )
+    text_dataset = TextDataset(root=ROOT_DATA, test_file="test_text", tokenizer=tokenizer, nlp_model=config["nlp_model_name"])
+    text_dataloader = TorchDataLoader(text_dataset, batch_size=config["batch_size"], shuffle=False, drop_last=False)
+
+    gt = np.load(GT_PATH, allow_pickle=True)[()]
+    graph_dataset = GraphDataset(root=ROOT_DATA, gt=gt, split="test_cids")
+    graph_dataloader = DataLoader(graph_dataset, batch_size=config["batch_size"], shuffle=False, drop_last=False)
 
     text_embeddings = text_inference(text_dataloader, device, text_model)
-
-    graph_dataset = GraphDataset(root=root, gt=gt, split="test_cids")
-    graph_dataloader = DataLoader(graph_dataset, batch_size=batch_size, shuffle=False)
-
     graph_embeddings = graph_inference(graph_dataloader, device, graph_model)
 
     similarity = cosine_similarity(text_embeddings, graph_embeddings)

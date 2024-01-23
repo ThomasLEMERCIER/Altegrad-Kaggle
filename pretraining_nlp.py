@@ -1,18 +1,18 @@
-import argparse
-import math
+# Standard library imports
 import os
+import math
+import argparse
 import os.path as osp
-
-import torch
-from transformers import AutoModelForMaskedLM, AutoTokenizer, Trainer, TrainingArguments
-from transformers import DataCollatorForLanguageModeling
-
-
 from yaml import safe_load
 
+# Related third party imports
+import torch
+from transformers import DataCollatorForLanguageModeling
+from transformers import AutoModelForMaskedLM, AutoTokenizer, Trainer, TrainingArguments
+
+# Local application/library specific imports
 from src.constants import *
 from src.nlp_pretraining import get_corpus_generator, masked_training_dataset
-
 
 def train_tokenizer(model_name, saving_path):
     train_set = get_corpus_generator(ROOT_DATA, "train")
@@ -26,7 +26,6 @@ def train_tokenizer(model_name, saving_path):
     new_tokenizer.save_pretrained(saving_path)
 
     return new_tokenizer
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
