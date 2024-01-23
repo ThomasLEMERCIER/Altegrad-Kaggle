@@ -78,7 +78,7 @@ def random_graph_data_aug(x, edge_index, params: GraphDataAugParams):
     p_features_masking: probability of masking a feature
     """
     # Only do graph data augmentation if the graph has enough nodes
-    if x.shape[0] > 5:
+    if x.shape[0] > 10:
         # Edge pertubation
         if params.p_edge_pertubation > 0:
             x, edge_index = edge_pertubation(x, edge_index, params.p_edge_pertubation)
