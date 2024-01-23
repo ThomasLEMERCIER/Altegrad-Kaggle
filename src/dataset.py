@@ -7,7 +7,7 @@ from concurrent.futures import ThreadPoolExecutor
 import torch
 from tqdm import tqdm
 import pandas as pd
-from torch_geometric.data import Data
+from torch_geometric.data import Data, HeteroData
 from torch_geometric.data import Dataset
 from torch.utils.data import Dataset as TorchDataset
 
@@ -204,3 +204,89 @@ class TextDataset(TorchDataset):
         data = torch.load(osp.join(self.preprocessed_dir, "data_{}.pt".format(idx)))
 
         return data
+
+class GraphPretrainingDataset(Dataset):
+    def __init__(self, root, gt, transform, transform_params, in_memory=True):
+        self.root = root
+        self.gt = gt
+        self.transform_data = transform
+        self.transform_data_params = transform_params
+        self.in_memory = in_memory
+
+        self.preprocessed_dir = osp.join(self.root, "preprocessed", "all_graph")
+        if not os.path.exists(self.preprocessed_dir):
+            os.makedirs(self.preprocessed_dir)
+            self.preprocess()
+
+        self.size = len(os.listdir(self.preprocessed_dir))
+        if self.in_memory:
+            self.data = []
+            for idx in tqdm(range(self.len()), desc="Loading data"):
+                self.data.append(
+                    torch.load(
+                        osp.join(self.preprocessed_dir, "data_{}.pt".format(idx))
+                    )
+                )
+
+        super(GraphDataset, self).__init__()
+
+    def preprocess(self):
+        num_workers = os.cpu_count()
+        files = [(file, idx) for idx, file in enumerate(os.listdir(osp.join(self.root, "raw")))]
+        with ThreadPoolExecutor(max_workers=num_workers) as executor:
+            futures = []
+
+            for file_idx in tqdm(files, desc="Preprocessing"):
+                future = executor.submit(self.process_single, file_idx)
+                futures.append(future)
+
+            # Wait for all futures to complete
+            for future in tqdm(futures, desc="Processing Complete", total=len(futures)):
+                future.result()
+
+    def process_single(self, file_idx):
+        raw_path = osp.join(self.root, "raw", file_idx[0])
+        edge_index, x = process_graph(raw_path, self.gt)
+        data = Data(
+            x=x,
+            edge_index=edge_index,
+        )
+        torch.save(data, osp.join(self.preprocessed_dir, "data_{}.pt".format(file_idx[1])))
+
+    def len(self):
+        return self.size
+
+    def get(self, idx):
+        if self.in_memory:
+
+            data = self.data[idx].clone()
+            u_x, u_edge_index = self.transform_data(data.x, data.edge_index, self.transform_data_params)
+            data = self.data[idx].clone()
+            v_x, v_edge_index = self.transform_data(data.x, data.edge_index, self.transform_data_params)
+
+            data = HeteroData()
+
+            data["u"].x = u_x
+            data["u"].edge_index = u_edge_index
+
+            data["v"].x = v_x
+            data["v"].edge_index = v_edge_index
+
+            return data
+        else:
+            data = torch.load(osp.join(self.preprocessed_dir, "data_{}.pt".format(idx)))
+
+            data_clone = data.clone()
+            u_x, u_edge_index = self.transform_data(data_clone.x, data_clone.edge_index, self.transform_data_params)
+            data_clone = data.clone()
+            v_x, v_edge_index = self.transform_data(data_clone.x, data_clone.edge_index, self.transform_data_params)
+
+            data = HeteroData()
+
+            data["u"].x = u_x
+            data["u"].edge_index = u_edge_index
+
+            data["v"].x = v_x
+            data["v"].edge_index = v_edge_index
+
+            return data

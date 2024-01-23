@@ -7,8 +7,8 @@ import torch
 import numpy as np
 
 # Local application/library specific imports
-from .model import Model
-from .dataset import GraphTextDataset
+from .model import Model, GraphEncoder
+from .dataset import GraphTextDataset, GraphPretrainingDataset
 from torch_geometric.loader import DataLoader
 from .constants import CHECKPOINT_FOLDER, NODE_FEATURES_SIZE, ROOT_DATA, GT_PATH
 
@@ -123,3 +123,46 @@ def get_dataloaders(config, tokenizer, only_val=False):
     val_loader = DataLoader(val_dataset, batch_size=config["batch_size"], shuffle=True, num_workers=1)
 
     return train_loader, val_loader
+
+def load_pretraining_model(config):
+     # ==== GNN parameters ==== #
+    gnn_model_name = config["gnn_model_name"]
+    gnn_num_layers = config["gnn_num_layers"]
+    gnn_dropout = config["gnn_dropout"]
+    gnn_hdim = config["gnn_hdim"]
+    mlp_hdim = config["mlp_hdim"]
+
+    # ==== Output parameters ==== #
+    nout = config["nout"]
+
+    student = GraphEncoder(
+        model_name=gnn_model_name,
+        num_node_features=NODE_FEATURES_SIZE,
+        graph_hidden_channels=gnn_hdim,
+        gnn_dropout=gnn_dropout,
+        gnn_num_layers=gnn_num_layers,
+    )
+
+    teacher = GraphEncoder(
+        model_name=gnn_model_name,
+        num_node_features=NODE_FEATURES_SIZE,
+        graph_hidden_channels=gnn_hdim,
+        gnn_dropout=gnn_dropout,
+        gnn_num_layers=gnn_num_layers,
+    )
+
+    return student, teacher
+
+def get_pretraining_dataloader(config, transform, transform_params):
+
+    train_dataset = GraphPretrainingDataset(
+        root=ROOT_DATA,
+        split="train",
+        in_memory=True,
+        transform=transform,
+        transform_params=transform_params,
+    )
+
+    train_loader = DataLoader(train_dataset, batch_size=config["batch_size"], shuffle=True, num_workers=1)
+
+    return train_loader
