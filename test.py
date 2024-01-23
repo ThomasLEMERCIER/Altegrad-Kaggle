@@ -31,11 +31,14 @@ if __name__ == "__main__":
     config_path = osp.join("configs", args.config)
     config = load_config(config_path)
 
-    run_name =  config["name"] + "_(" + datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + ")" + "_finetuning" if config["fine_tuning"] else ""
+    # ==== Run name ==== #
+    run_name = f"{config['name']}_{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}{('_finetuning' if config['fine_tuning'] else '')}"
+    print("Run name: ", run_name)
 
-    checkpoint_path = osp.join("checkpoints", run_name)
+    checkpoint_path = osp.join(CHECKPOINT_FOLDER, run_name)
     if not osp.exists(checkpoint_path):
         os.makedirs(checkpoint_path)
+    print("Checkpoint path: ", checkpoint_path)
 
     # ==== Logging ==== #
     logging.basicConfig(

@@ -26,7 +26,7 @@ if __name__ == "__main__":
     config = load_config(config_path)
 
     # ==== Run name ==== #
-    run_name =  config["name"] + "_(" + datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + ")" + "_finetuning" if config["fine_tuning"] else ""
+    run_name = f"{config['name']}_{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}{('_finetuning' if config['fine_tuning'] else '')}"
     print("Run name: ", run_name)
 
     # ==== Checkpoint ==== #
