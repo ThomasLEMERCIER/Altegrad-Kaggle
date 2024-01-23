@@ -87,7 +87,7 @@ class GraphTextDataset(Dataset):
     def get(self, idx):
         if self.in_memory:
             if self.data_transform is not None:
-                return self.data_transform(self.data[idx], self.data_transform_params)
+                return self.data_transform(self.data[idx].clone(), self.data_transform_params)
             return self.data[idx]
         else:
             cid = self.cids[idx]
