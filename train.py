@@ -66,6 +66,7 @@ if __name__ == "__main__":
 
     # ==== Transform ==== #
     transform, transform_params = get_transform(config)
+    print("Transform params: ", transform_params)
 
     # ===== Dataloaders ===== #
     print("Loading datasets")
