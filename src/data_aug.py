@@ -24,9 +24,9 @@ def edge_pertubation(x, edge_index, p):
     
     returns: perturbed edge index i.e. for an adjacency matrix A, A' = A XOR E, E bernoulli random variable matrix
     """
-    if round(edge_index.shape[1] * p) < 2:
-        return x, edge_index 
     edge_index, _ = tg_utils.dropout_edge(edge_index, p=p, force_undirected=True)
+    if round(edge_index.shape[1] * p) == 0:
+        return x, edge_index 
     edge_index, _ = tg_utils.add_random_edge(edge_index, p=p, force_undirected=True, num_nodes=x.shape[0])
     return x, edge_index
 
@@ -39,7 +39,8 @@ def graph_sampling(x, edge_index, p):
     returns: sampled node from the graph
     """
     to_keep = torch.randperm(x.shape[0])[:-int(x.shape[0] * p)]
-    edge_index, _ = tg_utils.subgraph(subset=to_keep, edge_index=edge_index, num_nodes=x.shape[0])
+    edge_index, _ = tg_utils.subgraph(subset=to_keep, edge_index=edge_index, num_nodes=x.shape[0], relabel_nodes=True)    
+
     return x[to_keep], edge_index
 
 def features_corruption(x, edge_index, std):
@@ -54,6 +55,7 @@ def features_corruption(x, edge_index, std):
 def features_shuffling(x, edge_index):
     """
     x: node features torch tensor of shape (num_nodes, num_node_features)
+    edge_index: edge index torch tensor of shape (2, num_edges)
     
     returns: shuffled node features
     """
@@ -62,6 +64,7 @@ def features_shuffling(x, edge_index):
 def features_masking(x, edge_index, p):
     """
     x: node features torch tensor of shape (num_nodes, num_node_features)
+    edge_index: edge index torch tensor of shape (2, num_edges)
     p: probability of masking a feature
     
     returns: masked node features
