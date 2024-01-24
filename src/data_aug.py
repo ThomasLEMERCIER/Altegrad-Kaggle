@@ -1,16 +1,29 @@
 import torch
 import random
+import numpy as np
 from dataclasses import dataclass
-from torch_geometric import utils as tg_utils
 from torch_geometric.data import Data
+from torch_geometric import utils as tg_utils
 
 @dataclass(frozen=True)
 class GraphDataAugParams:
+    lambda_aug: float
+
     p_edge_pertubation: float
+    edge_pertubation: float
+
     p_graph_sampling: float
+    graph_sampling: float
+
+    p_features_noise: float
     features_noise: float
+
     p_features_shuffling: float
+    features_shuffling: float
+
     p_features_masking: float
+    features_masking: float
+
 
 @dataclass(frozen=True)
 class DataAugParams:
@@ -25,8 +38,9 @@ def edge_pertubation(x, edge_index, p):
     returns: perturbed edge index i.e. for an adjacency matrix A, A' = A XOR E, E bernoulli random variable matrix
     """
     edge_index, _ = tg_utils.dropout_edge(edge_index, p=p, force_undirected=True)
-    if round(edge_index.shape[1] * p) < 2:
-        return x, edge_index 
+    # p is the proportion of new edges to add
+    if int(edge_index.shape[1] * p / (1 - p)) == 0: # if p is too small to add any edges
+        return x, edge_index
     edge_index, _ = tg_utils.add_random_edge(edge_index, p=p, force_undirected=True, num_nodes=x.shape[0])
     return x, edge_index
 
@@ -39,7 +53,7 @@ def graph_sampling(x, edge_index, p):
     returns: sampled node from the graph
     """
     to_keep = torch.randperm(x.shape[0])[int(x.shape[0] * p):]
-    edge_index, _ = tg_utils.subgraph(subset=to_keep, edge_index=edge_index, num_nodes=x.shape[0], relabel_nodes=True)    
+    edge_index, _ = tg_utils.subgraph(subset=to_keep, edge_index=edge_index, num_nodes=x.shape[0], relabel_nodes=True)
 
     return x[to_keep], edge_index
 
@@ -52,15 +66,24 @@ def features_corruption(x, edge_index, std):
     """
     return x + torch.randn(x.shape) * std, edge_index
 
-def features_shuffling(x, edge_index):
+def features_shuffling(x, edge_index, p_features):
     """
     x: node features torch tensor of shape (num_nodes, num_node_features)
     edge_index: edge index torch tensor of shape (2, num_edges)
+    p_features: proportion of features to shuffle
     
     returns: shuffled node features
     """
-    return x[torch.randperm(x.shape[0])], edge_index
+    n = x.shape[1]
+    m = int(n * p_features)
+    permuted_indices = torch.randperm(n)[:2*m].view(m, 2)
 
+    perm = torch.arange(n)
+    perm[permuted_indices[:, 0]] = permuted_indices[:, 1]
+    perm[permuted_indices[:, 1]] = permuted_indices[:, 0]
+
+    return x[:, perm], edge_index
+    
 def features_masking(x, edge_index, p):
     """
     x: node features torch tensor of shape (num_nodes, num_node_features)
@@ -69,45 +92,27 @@ def features_masking(x, edge_index, p):
     
     returns: masked node features
     """
-    mask = torch.rand(x.shape) < p
+    mask = torch.rand(x.shape) > p
     return x * mask, edge_index
+
+AUGS = [edge_pertubation, graph_sampling, features_corruption, features_shuffling, features_masking]
+NB_AUGMENTATIONS = len(AUGS)
 
 def random_graph_data_aug(x, edge_index, params: GraphDataAugParams):
     """
     x: node features torch tensor of shape (num_nodes, num_node_features)
     edge_index: edge index torch tensor of shape (2, num_edges)
-    p_edge_pertubation: probability of edge pertubation
-    p_graph_sampling: probability of removing a node
-    std: standard deviation of gaussian noise
-    p_features_shuffling: probability of shuffling features
-    p_features_masking: probability of masking a feature
+    params: data augmentation parameters
     """
+    if params.lambda_aug == 0:
+        return x, edge_index
 
-    # Edge pertubation
-    if params.p_edge_pertubation > 0:
-        x, edge_index = edge_pertubation(x, edge_index, params.p_edge_pertubation)
-    
-    # Graph sampling
-    if params.p_graph_sampling > 0:
-        x, edge_index = graph_sampling(x, edge_index, params.p_graph_sampling)
-  
-    # Features corruption
-    if params.features_noise > 0:
-        x, edge_index = features_corruption(x, edge_index, params.features_noise)
-    
-    # Features shuffling
-    if params.p_features_shuffling > 0:
-        if random.random() < params.p_features_shuffling:
-            x, edge_index = features_shuffling(x, edge_index)
-    
-    # Features masking
-    if params.p_features_masking > 0:
-        x, edge_index = features_masking(x, edge_index, params.p_features_masking)
+    n_aug = np.clip(1 + np.random.poisson(params.lambda_aug), 1, NB_AUGMENTATIONS)
+    which_aug = np.random.choice(NB_AUGMENTATIONS, n_aug, replace=False, p=[params.p_edge_pertubation, params.p_graph_sampling, params.p_features_noise, params.p_features_shuffling, params.p_features_masking])
 
-    # Add any missing self loops
-    edge_index, _ = tg_utils.remove_self_loops(edge_index)
-    edge_index, _ = tg_utils.add_self_loops(edge_index, num_nodes=x.shape[0])
-    
+    for aug in which_aug:
+        x, edge_index = AUGS[aug](x, edge_index, params.edge_pertubation)
+
     return x, edge_index
 
 def random_data_aug(data, params: DataAugParams):

@@ -34,11 +34,22 @@ fine_tuning: true
 checkpoint_name: baseline_extended/checkpoint_8.pt
 
 # ==== Transform ==== #
+lambda_aug: 0.
+
+p_edge_pertubation: 0.
 edge_pertubation: 0.
+
+p_graph_sampling: 0.
 graph_sampling: 0.
+
+p_features_noise: 0.
 features_noise: 0.
+
+p_features_shuffling: 0.
 features_shuffling: 0.
-features_masking: 0.
+
+p_features_masking: 0.
+features_masking: 0
 
 # ==== Scheduler ==== #
 scheduler: constant
