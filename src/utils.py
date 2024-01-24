@@ -10,6 +10,7 @@ from torch_geometric.loader import DataLoader
 # Local application/library specific imports
 from .model import Model
 from .dataset import GraphTextDataset
+from src.scheduler import warmup_cosineLR, constantLR
 from .constants import CHECKPOINT_FOLDER, NODE_FEATURES_SIZE, ROOT_DATA, GT_PATH
 from .data_aug import DataAugParams, GraphDataAugParams, random_data_aug
 
@@ -70,8 +71,7 @@ def load_checkpoint(model, optimizer, checkpoint_path):
     model_checkpoint = torch.load(checkpoint_path)
     model.load_state_dict(model_checkpoint["model_state_dict"])
     optimizer.load_state_dict(model_checkpoint["optimizer_state_dict"])
-    start_epoch = model_checkpoint["epoch"] + 1
-    return model, optimizer, start_epoch
+    return model, optimizer
 
 def load_model_from_checkpoint(model, checkpoint_path):
     model_checkpoint = torch.load(checkpoint_path)
@@ -137,3 +137,28 @@ def get_transform(config):
     )
 
     return random_data_aug, DataAugParams(graph_params=g_paramrs)
+
+def get_scheduler(config, train_loader):
+    nb_epochs = config["nb_epochs"]
+    eta_min = config["eta_min"]
+
+    if config["scheduler"] == "constant":
+        scheduler = constantLR(
+            epochs=nb_epochs,
+            eta_min=eta_min,
+            loader_length=len(train_loader),
+        )
+    elif config["scheduler"] == "warmup_cosine":
+        warmup_epochs = config["warmup_epochs"]
+        eta_max = config["eta_max"]
+        scheduler = warmup_cosineLR(
+            epochs=nb_epochs,
+            warmup_epochs=warmup_epochs,
+            eta_min=eta_min,
+            eta_max=eta_max,
+            loader_length=len(train_loader),
+        )
+    else:
+        raise ValueError("Scheduler not implemented")
+
+    return scheduler

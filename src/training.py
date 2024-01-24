@@ -11,11 +11,15 @@ from src.constants import *
 from src.loss import contrastive_loss
 
 
-def train_epoch(train_loader, device, model, optimizer, do_wandb, norm_loss):
+def train_epoch(train_loader, device, model, optimizer, scheduler, epoch, do_wandb, norm_loss):
     model.train()
     total_loss = 0
 
-    for batch in tqdm(train_loader, desc="Training"):
+    for it, batch in enumerate(tqdm(train_loader, desc="Training")):
+        itx = it + len(train_loader) * epoch
+        for param_group in optimizer.param_groups:
+            param_group["lr"] = scheduler[itx]
+
         input_ids = batch.input_ids
         attention_mask = batch.attention_mask
         batch.pop("input_ids")
@@ -38,7 +42,7 @@ def train_epoch(train_loader, device, model, optimizer, do_wandb, norm_loss):
         optimizer.step()
 
         if do_wandb:
-            wandb.log({"training_loss_step": loss.item()})
+            wandb.log({"training_loss_step": loss.item(), "lr": scheduler[itx]})
 
     average_loss = total_loss / len(train_loader)
 

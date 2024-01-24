@@ -14,7 +14,7 @@ from transformers import AutoTokenizer
 # Local application/library specific imports
 from src.constants import *
 from src.training import train_epoch, validation_epoch
-from src.utils import load_checkpoint, load_config, load_model, load_optimizer, get_dataloaders, save_checkpoint, get_transform
+from src.utils import load_checkpoint, load_config, load_model, load_optimizer, get_dataloaders, save_checkpoint, get_scheduler, get_transform
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -89,21 +89,24 @@ if __name__ == "__main__":
     # ==== Optimizer ==== #
     optimizer = load_optimizer(model, config)
     best_validation_larp = 0
-    start_epoch = 1
     nb_epochs = config["nb_epochs"]
     norm_loss = config["norm_loss"]
 
+    # ==== Scheduler ==== #
+    scheduler = get_scheduler(config, train_loader)
+
+
     if  config["fine_tuning"]:
         checkpoint_path = osp.join(CHECKPOINT_FOLDER, config["checkpoint_name"])
-        model, optimizer, start_epoch = load_checkpoint(
+        model, optimizer = load_checkpoint(
             model, optimizer, checkpoint_path
         )
 
-    for e in range(start_epoch, start_epoch + nb_epochs):
-        print("----- EPOCH {} -----".format(e))
+    for e in range(nb_epochs):
+        print("----- EPOCH {} -----".format(e + 1))
 
         trainning_loss = train_epoch(
-            train_loader, device, model, optimizer, args.wandb, norm_loss
+            train_loader, device, model, optimizer, scheduler, e, args.wandb, norm_loss
         )
         validation_loss, validation_lrap = validation_epoch(
             val_loader, device, model, norm_loss
@@ -119,12 +122,12 @@ if __name__ == "__main__":
             )
 
         logging.info(
-            f"Epoch {e}: Training loss: {trainning_loss}, Validation loss: {validation_loss}, LRAP: {validation_lrap}"
+            f"Epoch {e + 1}: Training loss: {trainning_loss}, Validation loss: {validation_loss}, LRAP: {validation_lrap}"
         )
 
         if validation_lrap > best_validation_larp:
             best_validation_larp = validation_lrap
-            save_path = osp.join(checkpoint_path, f"checkpoint_{e}.pt")
+            save_path = osp.join(checkpoint_path, f"checkpoint_{e+1}.pt")
             save_checkpoint(model, optimizer, e, save_path)
 
     logging.info(f"Best validation LARP: {best_validation_larp}")

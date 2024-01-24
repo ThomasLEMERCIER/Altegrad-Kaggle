@@ -40,3 +40,7 @@ features_noise: 0.
 features_shuffling: 0.
 features_masking: 0.
 
+# ==== Scheduler ==== #
+scheduler: constant
+eta_min: 2.e-5
+

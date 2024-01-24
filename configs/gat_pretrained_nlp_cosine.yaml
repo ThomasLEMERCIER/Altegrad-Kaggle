@@ -1,10 +1,10 @@
 # ==== Run name ==== #
-name: gat_aug
+name: gat_pretrained_nlp_cosine
 
 # ==== Nlp model parameters ==== #
 nlp_model_name: distilbert-base-uncased
-custom_tokenizer: False
-nlp_pretrained: False
+custom_tokenizer: true
+nlp_pretrained: true
 
 # ==== GNN parameters ==== #
 gnn_model_name: gat
@@ -17,7 +17,7 @@ gnn_dropout: 0.2
 nout: 768
 
 # ==== Training parameters ==== #
-nb_epochs: 20
+nb_epochs: 40
 batch_size: 64
 lr: 2.e-5
 weight_decay: 0.01
@@ -27,19 +27,21 @@ norm_loss: False
 avg_pool_nlp: False
 
 # ==== NLP checkpoint ==== #
-nlp_checkpoint: null
+nlp_checkpoint: checkpoint-7500
 
 # ==== Fine tuning ==== #
 fine_tuning: False
 checkpoint_name: null
 
 # ==== Transform ==== #
-edge_pertubation: 0.1
-graph_sampling: 0.1
-features_noise: 0.1
-features_shuffling: 0.1
-features_masking: 0.2
+edge_pertubation: 0.
+graph_sampling: 0.
+features_noise: 0.
+features_shuffling: 0.
+features_masking: 0.
 
 # ==== Scheduler ==== #
-scheduler: constant
-eta_min: 2.e-5
+scheduler: warmup_cosine
+warmup_epochs: 2
+eta_min: 1.e-8
+eta_max: 1.e-4
