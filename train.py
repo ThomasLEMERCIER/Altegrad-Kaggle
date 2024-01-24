@@ -127,7 +127,10 @@ if __name__ == "__main__":
 
         if validation_lrap > best_validation_larp:
             best_validation_larp = validation_lrap
-            save_path = osp.join(checkpoint_path, f"checkpoint_{e+1}.pt")
+            save_path = osp.join(checkpoint_path, f"checkpoint_best.pt")
             save_checkpoint(model, optimizer, e, save_path)
+    
+    save_path = osp.join(checkpoint_path, f"checkpoint_last.pt")
+    save_checkpoint(model, optimizer, nb_epochs, save_path)
 
     logging.info(f"Best validation LARP: {best_validation_larp}")
