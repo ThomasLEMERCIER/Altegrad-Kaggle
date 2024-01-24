@@ -130,6 +130,8 @@ def get_dataloaders(config, tokenizer, transform=None, transform_params=None, on
 def get_transform(config):
     g_paramrs = GraphDataAugParams(
         lambda_aug=config["lambda_aug"],
+        min_aug=config["min_aug"],
+        max_aug=config["max_aug"],
 
         p_edge_pertubation=config["p_edge_pertubation"],
         edge_pertubation=config["edge_pertubation"],

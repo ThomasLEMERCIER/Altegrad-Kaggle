@@ -8,6 +8,8 @@ from torch_geometric import utils as tg_utils
 @dataclass(frozen=True)
 class GraphDataAugParams:
     lambda_aug: float
+    min_aug: int
+    max_aug: int
 
     p_edge_pertubation: float
     edge_pertubation: float
@@ -107,7 +109,7 @@ def random_graph_data_aug(x, edge_index, params: GraphDataAugParams):
     if params.lambda_aug == 0:
         return x, edge_index
 
-    n_aug = np.clip(1 + np.random.poisson(params.lambda_aug), 1, NB_AUGMENTATIONS)
+    n_aug = np.clip(np.random.poisson(params.lambda_aug), params.min_aug, min(params.max_aug, NB_AUGMENTATIONS))
     which_aug = np.random.choice(NB_AUGMENTATIONS, n_aug, replace=False, p=[params.p_edge_pertubation, params.p_graph_sampling, params.p_features_noise, params.p_features_shuffling, params.p_features_masking])
 
     for aug in which_aug:
