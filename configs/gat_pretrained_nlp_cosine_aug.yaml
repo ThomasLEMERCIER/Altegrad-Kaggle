@@ -17,8 +17,8 @@ gnn_dropout: 0.2
 nout: 768
 
 # ==== Training parameters ==== #
-nb_epochs: 40
-batch_size: 64
+nb_epochs: 80
+batch_size: 128
 lr: 2.e-5
 weight_decay: 0.01
 
