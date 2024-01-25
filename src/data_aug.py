@@ -62,7 +62,7 @@ def graph_sampling(x, edge_index, p):
     returns: sampled node from the graph
     """
     num_nodes_to_keep = torch.randint(
-        low=max(int(x.shape[0] * p), 1), high=x.shape[0], size=(1,)
+        low=max(int(x.shape[0] * p), 1), high=x.shape[0] + 1, size=(1,)
     ).item()
     nodes_to_keep = torch.randperm(x.shape[0])[:num_nodes_to_keep]
     edge_index, _ = tg_utils.subgraph(
