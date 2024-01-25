@@ -34,23 +34,23 @@ fine_tuning: False
 checkpoint_name: null
 
 # ==== Transform ==== #
-lambda_aug: 1.5
+lambda_aug: 0.5
 min_aug: 0
-max_aug: 5
+max_aug: 1
 
-p_edge_pertubation: 0.2
+p_edge_pertubation: 0
 edge_pertubation: 0.1
 
-p_graph_sampling: 0.2
-graph_sampling: 0.1
+p_graph_sampling: 1
+graph_sampling: 0.5
 
-p_features_noise: 0.2
+p_features_noise: 0
 features_noise: 0.1
 
-p_features_shuffling: 0.2
+p_features_shuffling: 0
 features_shuffling: 0.075
 
-p_features_masking: 0.2
+p_features_masking: 0
 features_masking: 0.15
 
 # ==== Scheduler ==== #
