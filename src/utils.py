@@ -14,10 +14,12 @@ from src.scheduler import warmup_cosineLR, constantLR
 from .constants import CHECKPOINT_FOLDER, NODE_FEATURES_SIZE, ROOT_DATA, GT_PATH
 from .data_aug import DataAugParams, GraphDataAugParams, random_data_aug
 
+
 def load_config(config_path):
     with open(config_path, "r") as f:
         config = yaml.safe_load(f)
     return config
+
 
 def load_model(config):
     # === NLP model === #
@@ -43,7 +45,9 @@ def load_model(config):
     if not nlp_pretrained:
         nlp_checkpoint = None
     else:
-        nlp_checkpoint = osp.join(CHECKPOINT_FOLDER, "pretraining", nlp_model_name, nlp_checkpoint)
+        nlp_checkpoint = osp.join(
+            CHECKPOINT_FOLDER, "pretraining", nlp_model_name, nlp_checkpoint
+        )
 
     model = Model(
         nlp_model_name=nlp_model_name,
@@ -55,10 +59,11 @@ def load_model(config):
         gnn_dropout=gnn_dropout,
         gnn_num_layers=gnn_num_layers,
         nlp_checkpoint=nlp_checkpoint,
-        avg_pool_nlp=avg_pool_nlp
+        avg_pool_nlp=avg_pool_nlp,
     )
 
     return model
+
 
 def load_optimizer(model, config):
     lr = config["lr"]
@@ -67,16 +72,19 @@ def load_optimizer(model, config):
     optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
     return optimizer
 
+
 def load_checkpoint(model, optimizer, checkpoint_path):
     model_checkpoint = torch.load(checkpoint_path)
     model.load_state_dict(model_checkpoint["model_state_dict"])
     optimizer.load_state_dict(model_checkpoint["optimizer_state_dict"])
     return model, optimizer
 
+
 def load_model_from_checkpoint(model, checkpoint_path):
     model_checkpoint = torch.load(checkpoint_path)
     model.load_state_dict(model_checkpoint["model_state_dict"])
     return model
+
 
 def save_checkpoint(model, optimizer, epoch, checkpoint_path):
     torch.save(
@@ -88,7 +96,10 @@ def save_checkpoint(model, optimizer, epoch, checkpoint_path):
         checkpoint_path,
     )
 
-def get_dataloaders(config, tokenizer, transform=None, transform_params=None, only_val=False):
+
+def get_dataloaders(
+    config, tokenizer, transform=None, transform_params=None, only_val=False
+):
     gt = np.load(GT_PATH, allow_pickle=True)[()]
 
     if only_val:
@@ -100,9 +111,15 @@ def get_dataloaders(config, tokenizer, transform=None, transform_params=None, on
             nlp_model=config["nlp_model_name"],
             in_memory=True,
         )
-        val_loader = DataLoader(val_dataset, batch_size=config["batch_size"], shuffle=False, num_workers=1, drop_last=False)
+        val_loader = DataLoader(
+            val_dataset,
+            batch_size=config["batch_size"],
+            shuffle=False,
+            num_workers=1,
+            drop_last=False,
+        )
         return val_loader
-    
+
     train_dataset = GraphTextDataset(
         root=ROOT_DATA,
         gt=gt,
@@ -111,7 +128,7 @@ def get_dataloaders(config, tokenizer, transform=None, transform_params=None, on
         nlp_model=config["nlp_model_name"],
         in_memory=True,
         transform=transform,
-        transform_params=transform_params
+        transform_params=transform_params,
     )
     val_dataset = GraphTextDataset(
         root=ROOT_DATA,
@@ -122,34 +139,36 @@ def get_dataloaders(config, tokenizer, transform=None, transform_params=None, on
         in_memory=True,
     )
 
-    train_loader = DataLoader(train_dataset, batch_size=config["batch_size"], shuffle=True, num_workers=1)
-    val_loader = DataLoader(val_dataset, batch_size=config["batch_size"], shuffle=True, num_workers=1)
+    train_loader = DataLoader(
+        train_dataset, batch_size=config["batch_size"], shuffle=True, num_workers=1
+    )
+    val_loader = DataLoader(
+        val_dataset, batch_size=config["batch_size"], shuffle=True, num_workers=1
+    )
 
     return train_loader, val_loader
+
 
 def get_transform(config):
     g_paramrs = GraphDataAugParams(
         lambda_aug=config["lambda_aug"],
         min_aug=config["min_aug"],
         max_aug=config["max_aug"],
-
         p_edge_pertubation=config["p_edge_pertubation"],
         edge_pertubation=config["edge_pertubation"],
-
         p_graph_sampling=config["p_graph_sampling"],
         graph_sampling=config["graph_sampling"],
-
         p_features_noise=config["p_features_noise"],
         features_noise=config["features_noise"],
-
         p_features_shuffling=config["p_features_shuffling"],
         features_shuffling=config["features_shuffling"],
-
         p_features_masking=config["p_features_masking"],
         features_masking=config["features_masking"],
+        p_k_hop_subgraph=config["p_k_hop_subgraph"],
     )
 
     return random_data_aug, DataAugParams(graph_params=g_paramrs)
+
 
 def get_scheduler(config, train_loader):
     nb_epochs = config["nb_epochs"]

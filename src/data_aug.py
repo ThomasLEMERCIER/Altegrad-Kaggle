@@ -27,6 +27,8 @@ class GraphDataAugParams:
     p_features_masking: float
     features_masking: float
 
+    p_khop_subgraph: float
+
 
 @dataclass(frozen=True)
 class DataAugParams:
@@ -73,6 +75,23 @@ def graph_sampling(x, edge_index, p):
     )
 
     return x[nodes_to_keep], edge_index
+
+
+def k_hop_subgraph(x, edge_index):
+    """
+    x: node features torch tensor of shape (num_nodes, num_node_features)
+    edge_index: edge index torch tensor of shape (2, num_edges)
+
+    returns: k-hop subgraph
+    """
+    start_node = random.randint(0, x.shape[0] - 1)
+    k = random.randint(5, 10)
+
+    sub_nodes, sub_edge_index, _, _ = tg_utils.k_hop_subgraph(
+        start_node, k, edge_index, relabel_nodes=True, num_nodes=x.shape[0]
+    )
+
+    return x[sub_nodes], sub_edge_index
 
 
 def features_corruption(x, edge_index, std):
@@ -122,6 +141,7 @@ AUGS = [
     features_corruption,
     features_shuffling,
     features_masking,
+    k_hop_subgraph,
 ]
 NB_AUGMENTATIONS = len(AUGS)
 
@@ -150,6 +170,7 @@ def random_graph_data_aug(x, edge_index, params: GraphDataAugParams):
             params.p_features_noise,
             params.p_features_shuffling,
             params.p_features_masking,
+            params.p_khop_subgraph,
         ],
     )
 
@@ -159,6 +180,7 @@ def random_graph_data_aug(x, edge_index, params: GraphDataAugParams):
         (params.features_noise,),
         (params.features_shuffling,),
         (params.features_masking,),
+        tuple(),
     ]
 
     for aug in which_aug:
