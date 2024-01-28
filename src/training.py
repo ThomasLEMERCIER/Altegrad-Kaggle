@@ -11,7 +11,9 @@ from src.constants import *
 from src.loss import contrastive_loss
 
 
-def train_epoch(train_loader, device, model, optimizer, scheduler, epoch, do_wandb, norm_loss):
+def train_epoch(
+    train_loader, device, model, optimizer, scheduler, epoch, do_wandb, norm_loss
+):
     model.train()
     total_loss = 0
 
@@ -77,7 +79,9 @@ def validation_epoch(val_loader, device, model, norm_loss):
             graph_embeddings, text_embeddings = model(
                 graph_batch, input_ids, attention_mask
             )
-            loss = contrastive_loss(graph_embeddings, text_embeddings, normalize=norm_loss)
+            loss = contrastive_loss(
+                graph_embeddings, text_embeddings, normalize=norm_loss
+            )
             total_loss += loss.item()
 
             text_embeddings_list.append(text_embeddings.cpu().numpy())

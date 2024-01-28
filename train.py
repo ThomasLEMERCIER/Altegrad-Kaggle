@@ -14,7 +14,17 @@ from transformers import AutoTokenizer
 # Local application/library specific imports
 from src.constants import *
 from src.training import train_epoch, validation_epoch
-from src.utils import load_checkpoint, load_config, load_model, load_optimizer, get_dataloaders, save_checkpoint, get_scheduler, get_transform
+from src.utils import (
+    load_checkpoint,
+    load_config,
+    load_model,
+    load_optimizer,
+    get_dataloaders,
+    save_checkpoint,
+    get_scheduler,
+    update_decay_scheduler,
+    get_transform,
+)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -76,10 +86,10 @@ if __name__ == "__main__":
         tokenizer=tokenizer,
         only_val=False,
         transform=transform,
-        transform_params=transform_params
+        transform_params=transform_params,
     )
     print("Loading time: ", time.time() - loading_time)
-    
+
     # ==== Device ==== #
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -94,13 +104,11 @@ if __name__ == "__main__":
 
     # ==== Scheduler ==== #
     scheduler = get_scheduler(config, train_loader)
+    last_scheduler_update = 0
 
-
-    if  config["fine_tuning"]:
+    if config["fine_tuning"]:
         checkpoint_path = osp.join(CHECKPOINT_FOLDER, config["checkpoint_name"])
-        model, optimizer = load_checkpoint(
-            model, optimizer, checkpoint_path
-        )
+        model, optimizer = load_checkpoint(model, optimizer, checkpoint_path)
 
     for e in range(nb_epochs):
         print("----- EPOCH {} -----".format(e + 1))
@@ -111,6 +119,7 @@ if __name__ == "__main__":
         validation_loss, validation_lrap = validation_epoch(
             val_loader, device, model, norm_loss
         )
+        last_scheduler_update += 1
 
         if args.wandb:
             wandb.log(
@@ -129,7 +138,17 @@ if __name__ == "__main__":
             best_validation_larp = validation_lrap
             save_path = osp.join(checkpoint_path, f"checkpoint_best.pt")
             save_checkpoint(model, optimizer, e, save_path)
-    
+            last_scheduler_update = 0
+
+        if (
+            config["scheduler"] == "exp_decay"
+            and last_scheduler_update > config["wait_epochs"]
+        ):
+            scheduler = update_decay_scheduler(
+                scheduler, config["scheduler_decay"], e * len(train_loader)
+            )
+            last_scheduler_update = 0
+
     save_path = osp.join(checkpoint_path, f"checkpoint_last.pt")
     save_checkpoint(model, optimizer, nb_epochs, save_path)
 

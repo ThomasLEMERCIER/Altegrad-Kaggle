@@ -174,7 +174,7 @@ def get_scheduler(config, train_loader):
     nb_epochs = config["nb_epochs"]
     eta_min = config["eta_min"]
 
-    if config["scheduler"] == "constant":
+    if config["scheduler"] == "constant" or config["scheduler"] == "exp_decay":
         scheduler = constantLR(
             epochs=nb_epochs,
             eta_min=eta_min,
@@ -192,5 +192,11 @@ def get_scheduler(config, train_loader):
         )
     else:
         raise ValueError("Scheduler not implemented")
+
+    return scheduler
+
+
+def update_decay_scheduler(scheduler, decay_factor, current_step):
+    scheduler[current_step:] *= decay_factor
 
     return scheduler
