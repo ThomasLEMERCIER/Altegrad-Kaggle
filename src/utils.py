@@ -164,7 +164,7 @@ def get_transform(config):
         features_shuffling=config["features_shuffling"],
         p_features_masking=config["p_features_masking"],
         features_masking=config["features_masking"],
-        p_k_hop_subgraph=config["p_k_hop_subgraph"],
+        p_khop_subgraph=config["p_k_hop_subgraph"],
     )
 
     return random_data_aug, DataAugParams(graph_params=g_paramrs)
