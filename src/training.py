@@ -106,19 +106,17 @@ def pretraining_graph(train_loader, device, model_student, model_teacher, center
 
         batch_u, batch_v = batch
 
-        batch_u_x = batch_u.x.to(device)
-        batch_u_edge_index = batch_u.edge_index.to(device)
-        batch_v_x = batch_v.x.to(device)
-        batch_v_edge_index = batch_v.edge_index.to(device)
+        batch_u = batch_u.to(device)
+        batch_v = batch_v.to(device)
 
         optimizer.zero_grad()
 
-        student_u = model_student(batch_u_x, batch_u_edge_index)
-        student_v = model_student(batch_v_x, batch_v_edge_index)
+        student_u = model_student(batch_u)
+        student_v = model_student(batch_v)
 
         with torch.no_grad():
-            teacher_u = model_teacher(batch_u_x, batch_u_edge_index)
-            teacher_v = model_teacher(batch_v_x, batch_v_edge_index)
+            teacher_u = model_teacher(batch_u)
+            teacher_v = model_teacher(batch_v)
 
         loss = self_supervised_entropy(student_u, teacher_v, center, temperature_student, temperature_teacher) + self_supervised_entropy(student_v, teacher_u, center, temperature_student, temperature_teacher)
         total_loss += loss.item()
