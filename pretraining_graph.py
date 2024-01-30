@@ -77,7 +77,7 @@ if __name__ == "__main__":
     # ==== Scheduler ==== #
     scheduler = get_scheduler(config, train_loader)
     last_scheduler_update = 0
-    momentum_teacher = cosineLR(nb_epochs, config["momentum_teacher_min"], 1, len(train_loader))
+    momentum_teacher = cosineLR(nb_epochs, config["lr_teacher"], 1, len(train_loader))
 
     for e in range(start_epoch, start_epoch + nb_epochs):
         print("----- EPOCH {} -----".format(e))
