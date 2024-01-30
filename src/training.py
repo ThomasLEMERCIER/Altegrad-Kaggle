@@ -94,12 +94,16 @@ def validation_epoch(val_loader, device, model, norm_loss):
 
     return average_loss, lrap
 
-def pretraining_graph(train_loader, device, model_student, model_teacher, center, optimizer, do_wandb, m, l, temperature_student, temperature_teacher):
+def pretraining_graph(train_loader, device, model_student, model_teacher, center, optimizer, scheduler, epoch, do_wandb, momentum_center, momentum_teacher, temperature_student, temperature_teacher):
     model_student.train()
     model_teacher.eval()
     total_loss = 0
 
-    for batch in tqdm(train_loader, desc="Training"):
+    for it, batch in enumerate(tqdm(train_loader, desc="Training")):
+        itx = it + len(train_loader) * epoch
+        for param_group in optimizer.param_groups:
+            param_group["lr"] = scheduler[itx]
+
         batch_u = batch["u"]
         batch_v = batch["v"]
 
@@ -124,13 +128,14 @@ def pretraining_graph(train_loader, device, model_student, model_teacher, center
         optimizer.step()
         
         # ema update for teacher model
+        lr_teacher = momentum_teacher[itx]
         for param_s, param_t in zip(model_student.parameters(), model_teacher.parameters()):
-            param_t.data = l * param_t.data + (1 - l) * param_s.detach().data
+            param_t.data = lr_teacher * param_t.data + (1 - lr_teacher) * param_s.detach().data
 
         if do_wandb:
             wandb.log({"training_loss_step": loss.item()})
 
-        center = m * center + (1 - m) * torch.stack([student_u, teacher_v], dim=0).mean(dim=0)       
+        center = momentum_center * center + (1 - momentum_center) * torch.stack([student_u, teacher_v], dim=0).mean(dim=0)       
 
     average_loss = total_loss / len(train_loader)
 

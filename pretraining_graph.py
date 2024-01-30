@@ -9,12 +9,12 @@ import os.path as osp
 # Related third-party imports
 import torch
 import wandb
-from transformers import AutoTokenizer
 
 # Local application/library specific imports
 from src.constants import *
+from src.scheduler import cosineLR
 from src.training import pretraining_graph
-from src.utils import load_config, load_pretraining_model, load_optimizer, get_pretraining_dataloader, save_checkpoint
+from src.utils import load_config, load_pretraining_model, load_optimizer, get_pretraining_dataloader, save_checkpoint, get_transform, get_scheduler
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -52,6 +52,9 @@ if __name__ == "__main__":
         )
         wandb.config.update(config)
 
+    # ==== Data augmentation ==== #
+    transform, transform_params = get_transform(config)
+
     # ===== Dataloaders ===== #
     print("Loading datasets")
     loading_time = time.time()
@@ -71,6 +74,11 @@ if __name__ == "__main__":
     start_epoch = 1
     nb_epochs = config["nb_epochs"]
 
+    # ==== Scheduler ==== #
+    scheduler = get_scheduler(config, train_loader)
+    last_scheduler_update = 0
+    momentum_teacher = cosineLR(nb_epochs, config["momentum_teacher_min"], 1, len(train_loader))
+
     for e in range(start_epoch, start_epoch + nb_epochs):
         print("----- EPOCH {} -----".format(e))
 
@@ -81,9 +89,11 @@ if __name__ == "__main__":
             teacher,
             center,
             optimizer,
+            scheduler,
+            e,
             config["do_wandb"],
-            config["m"],
-            config["l"],
+            config["momentum_center"],
+            momentum_teacher,
             config["temperature_student"],
             config["temperature_teacher"]
         )

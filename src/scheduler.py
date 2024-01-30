@@ -16,6 +16,17 @@ def warmup_cosineLR(epochs, warmup_epochs, eta_min, eta_max, loader_length):
 
     return lr
 
+def cosineLR(epochs, eta_min, eta_max, loader_length):
+    T_max = epochs * loader_length
+    steps = np.arange(0, T_max)
+
+    lr = np.empty(T_max, dtype=np.float32)
+    lr[:] = eta_min + 0.5 * (eta_max - eta_min) * (
+        1
+        + np.cos(steps / T_max * np.pi)
+    )
+
+    return lr
 
 def constantLR(epochs, eta_min, loader_length):
     T_max = epochs * loader_length
