@@ -1,5 +1,5 @@
 # ==== Run name ==== #
-name: baseline_pool
+name: gat_aug
 
 # ==== Nlp model parameters ==== #
 nlp_model_name: distilbert-base-uncased
@@ -7,24 +7,24 @@ custom_tokenizer: False
 nlp_pretrained: False
 
 # ==== GNN parameters ==== #
-gnn_model_name: gcn
-gnn_num_layers: 3
-gnn_hdim: 300
-mlp_hdim: 300
-gnn_dropout: 0.
+gnn_model_name: gat
+gnn_num_layers: 6
+gnn_hdim: 512
+mlp_hdim: 512
+gnn_dropout: 0.2
 
 # ==== Output parameters ==== #
 nout: 768
 
 # ==== Training parameters ==== #
-nb_epochs: 10
+nb_epochs: 20
 batch_size: 64
 lr: 2.e-5
 weight_decay: 0.01
 
 # ==== Loss/Model options ==== #
 norm_loss: False
-avg_pool_nlp: True
+avg_pool_nlp: False
 
 # ==== NLP checkpoint ==== #
 nlp_checkpoint: null
@@ -34,24 +34,24 @@ fine_tuning: False
 checkpoint_name: null
 
 # ==== Transform ==== #
-lambda_aug: 0.
+lambda_aug: 1.5
 min_aug: 0
-max_aug: 0
+max_aug: 5
 
-p_edge_pertubation: 0.
-edge_pertubation: 0.
+p_edge_pertubation: 0.2
+edge_pertubation: 0.1
 
-p_graph_sampling: 0.
-graph_sampling: 0.
+p_graph_sampling: 0.2
+graph_sampling: 0.1
 
-p_features_noise: 0.
-features_noise: 0.
+p_features_noise: 0.2
+features_noise: 0.1
 
-p_features_shuffling: 0.
-features_shuffling: 0.
+p_features_shuffling: 0.2
+features_shuffling: 0.075
 
-p_features_masking: 0.
-features_masking: 0
+p_features_masking: 0.2
+features_masking: 0.15
 
 # ==== Scheduler ==== #
 scheduler: constant

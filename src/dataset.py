@@ -14,18 +14,35 @@ from torch.utils.data import Dataset as TorchDataset
 # Local application/library specific imports
 from src.preprocessing import process_graph, process_text
 
+
 class GraphTextDataset(Dataset):
     """
     Dataset for the graph and text data
     """
 
-    def __init__(self, root, gt, split, tokenizer, nlp_model, in_memory=True):
+    def __init__(
+        self,
+        root,
+        gt,
+        split,
+        tokenizer,
+        nlp_model,
+        in_memory=True,
+        transform=None,
+        transform_params=None,
+    ):
         self.root = root
         self.gt = gt
         self.split = split
         self.nlp_model = nlp_model
         self.tokenizer = tokenizer
         self.in_memory = in_memory
+        self.data_transform = (
+            transform  # not overwriting the transform method of Dataset
+        )
+        self.data_transform_params = (
+            transform_params  # not overwriting the transform method of Dataset
+        )
         self.description = (
             pd.read_csv(osp.join(self.root, split + ".tsv"), sep="\t", header=None)
             .set_index(0)[1]
@@ -84,18 +101,27 @@ class GraphTextDataset(Dataset):
 
     def get(self, idx):
         if self.in_memory:
+            if self.data_transform is not None:
+                return self.data_transform(
+                    self.data[idx].clone(), self.data_transform_params
+                )
             return self.data[idx]
         else:
             cid = self.cids[idx]
             data = torch.load(osp.join(self.preprocessed_dir, "data_{}.pt".format(cid)))
+            if self.data_transform is not None:
+                return self.data_transform(data, self.data_transform_params)
             return data
 
 
 class GraphDataset(Dataset):
-    def __init__(self, root, gt, split):
+    def __init__(self, root, gt, split, transform=None, transform_params=None):
         self.root = root
         self.gt = gt
         self.split = split
+        self.data_transform = transform
+        self.data_transform_params = transform_params
+
         self.description = pd.read_csv(
             osp.join(self.root, split + ".txt"), sep="\t", header=None
         )
@@ -141,11 +167,21 @@ class GraphDataset(Dataset):
         cid = self.cids[idx]
         data = torch.load(osp.join(self.preprocessed_dir, "data_{}.pt".format(cid)))
 
+        if self.data_transform is not None:
+            return self.data_transform(data, self.data_transform_params)
         return data
 
 
 class TextDataset(TorchDataset):
-    def __init__(self, root, test_file, tokenizer, nlp_model):
+    def __init__(
+        self,
+        root,
+        test_file,
+        tokenizer,
+        nlp_model,
+        transform=None,
+        transform_params=None,
+    ):
         self.tokenizer = tokenizer
         self.nlp_model = nlp_model
         self.root = root
@@ -159,6 +195,9 @@ class TextDataset(TorchDataset):
             self.preprocess()
         else:
             self.length = len(os.listdir(self.preprocessed_dir))
+
+        self.data_transform = transform
+        self.data_transform_params = transform_params
 
         super(TextDataset, self).__init__()
 
@@ -203,6 +242,8 @@ class TextDataset(TorchDataset):
     def __getitem__(self, idx):
         data = torch.load(osp.join(self.preprocessed_dir, "data_{}.pt".format(idx)))
 
+        if self.data_transform is not None:
+            return self.data_transform(data, self.data_transform_params)
         return data
 
 class GraphPretrainingDataset(Dataset):
