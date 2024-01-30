@@ -133,7 +133,7 @@ def pretraining_graph(train_loader, device, model_student, model_teacher, center
             param_t.data = lr_teacher * param_t.data + (1 - lr_teacher) * param_s.detach().data
 
         if do_wandb:
-            wandb.log({"training_loss_step": loss.item()})
+            wandb.log({"training_loss_step": loss.item(), "lr": scheduler[itx], "lr_teacher": lr_teacher})
 
         center = momentum_center * center + (1 - momentum_center) * torch.concat([student_u.detach(), teacher_v.detach()], dim=0).mean(dim=0)       
 
