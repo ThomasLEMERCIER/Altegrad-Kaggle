@@ -33,6 +33,26 @@ nlp_checkpoint: checkpoint-7500
 fine_tuning: False
 checkpoint_name: null
 
+# ==== Transform ==== #
+lambda_aug: 0.
+min_aug: 0
+max_aug: 0
+
+p_edge_pertubation: 0.
+edge_pertubation: 0.
+
+p_graph_sampling: 0.
+graph_sampling: 0.
+
+p_features_noise: 0.
+features_noise: 0.
+
+p_features_shuffling: 0.
+features_shuffling: 0.
+
+p_features_masking: 0.
+features_masking: 0
+
 # ==== Scheduler ==== #
 scheduler: constant
 eta_min: 2.e-5

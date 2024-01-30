@@ -20,7 +20,12 @@ from src.constants import *
 from src.training import validation_epoch
 from src.dataset import GraphDataset, TextDataset
 from src.evaluation import graph_inference, text_inference
-from src.utils import load_config, load_model, get_dataloaders, load_model_from_checkpoint
+from src.utils import (
+    load_config,
+    load_model,
+    get_dataloaders,
+    load_model_from_checkpoint,
+)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -69,17 +74,19 @@ if __name__ == "__main__":
         only_val=True,
     )
     print("Loading time: ", time.time() - loading_time)
-    
+
     # ==== Device ==== #
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # ==== Model ==== #
     model = load_model(config).to(device)
-    model = load_model_from_checkpoint(model, args.weights)
+    model = load_model_from_checkpoint(model, args.weights, device)
     model.to(device)
     model.eval()
 
-    validation_loss, validation_lrap = validation_epoch(val_loader, device, model, config["norm_loss"])
+    validation_loss, validation_lrap = validation_epoch(
+        val_loader, device, model, config["norm_loss"]
+    )
 
     print(f"Validation loss: {validation_loss}")
     print(f"Validation LRAP: {validation_lrap}")
@@ -88,12 +95,21 @@ if __name__ == "__main__":
     graph_model = model.get_graph_encoder()
     text_model = model.get_text_encoder()
 
-    text_dataset = TextDataset(root=ROOT_DATA, test_file="test_text", tokenizer=tokenizer, nlp_model=config["nlp_model_name"])
-    text_dataloader = TorchDataLoader(text_dataset, batch_size=config["batch_size"], shuffle=False, drop_last=False)
+    text_dataset = TextDataset(
+        root=ROOT_DATA,
+        test_file="test_text",
+        tokenizer=tokenizer,
+        nlp_model=config["nlp_model_name"],
+    )
+    text_dataloader = TorchDataLoader(
+        text_dataset, batch_size=config["batch_size"], shuffle=False, drop_last=False
+    )
 
     gt = np.load(GT_PATH, allow_pickle=True)[()]
     graph_dataset = GraphDataset(root=ROOT_DATA, gt=gt, split="test_cids")
-    graph_dataloader = DataLoader(graph_dataset, batch_size=config["batch_size"], shuffle=False, drop_last=False)
+    graph_dataloader = DataLoader(
+        graph_dataset, batch_size=config["batch_size"], shuffle=False, drop_last=False
+    )
 
     text_embeddings = text_inference(text_dataloader, device, text_model)
     graph_embeddings = graph_inference(graph_dataloader, device, graph_model)
