@@ -181,9 +181,11 @@ def load_pretraining_model(config):
     return student, teacher
 
 def get_pretraining_dataloader(config, transform, transform_params):
+    gt = np.load(GT_PATH, allow_pickle=True)[()]
 
     train_dataset = GraphPretrainingDataset(
         root=ROOT_DATA,
+        gt=gt,
         in_memory=True,
         transform=transform,
         transform_params=transform_params,
