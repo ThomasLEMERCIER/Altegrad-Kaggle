@@ -259,7 +259,7 @@ class GraphPretrainingDataset(Dataset):
             os.makedirs(self.preprocessed_dir)
             self.preprocess()
 
-        self.size = len(os.listdir(self.preprocessed_dir))
+        self.size = len([file for file in os.listdir(self.preprocessed_dir) if file.endswith(".pt")])
         if self.in_memory:
             self.data = []
             for idx in tqdm(range(self.len()), desc="Loading data"):
@@ -273,7 +273,8 @@ class GraphPretrainingDataset(Dataset):
 
     def preprocess(self):
         num_workers = os.cpu_count()
-        files = [(file, idx) for idx, file in enumerate(os.listdir(osp.join(self.root, "raw"))) if file.endswith(".graph")]
+        files = [file for file in os.listdir(osp.join(self.root, "raw")) if file.endswith(".graph")]
+        files = [(file, idx) for idx, file in enumerate(files)]
         with ThreadPoolExecutor(max_workers=num_workers) as executor:
             futures = []
 
