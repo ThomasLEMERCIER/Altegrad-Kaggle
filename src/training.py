@@ -114,15 +114,19 @@ def pretraining_graph(train_loader, device, model_student, model_teacher, center
         student_u = model_student(batch_u)
         student_v = model_student(batch_v)
 
-        teacher_u = model_teacher(batch_u).detach()
-        teacher_v = model_teacher(batch_v).detach()
+        with torch.no_grad():
+            teacher_u = model_teacher(batch_u)
+            teacher_v = model_teacher(batch_v)
 
-        loss = self_supervised_entropy(student_u, teacher_v, center, temperature_student, temperature_teacher) + self_supervised_entropy(student_v, teacher_u, center, temperature_student, temperature_teacher)
-        total_loss += loss.item()
+        loss_uv = self_supervised_entropy(student_u, teacher_v, center, temperature_student, temperature_teacher)
+        loss_vu = self_supervised_entropy(student_v, teacher_u, center, temperature_student, temperature_teacher)
+        loss = loss_uv + loss_vu
 
         loss.backward()
         optimizer.step()
-        
+
+        total_loss += loss.item()
+
         # ema update for teacher model
         lr_teacher = momentum_teacher[itx]
         for param_s, param_t in zip(model_student.parameters(), model_teacher.parameters()):
