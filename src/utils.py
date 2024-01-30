@@ -217,7 +217,7 @@ def get_transform(config):
         p_khop_subgraph=config["p_k_hop_subgraph"],
     )
 
-    return random_graph_data_aug, DataAugParams(graph_params=g_paramrs)
+    return random_data_aug, DataAugParams(graph_params=g_paramrs)
 
 def get_transform_gnn(config):
     g_paramrs = GraphDataAugParams(
@@ -237,7 +237,7 @@ def get_transform_gnn(config):
         p_khop_subgraph=config["p_k_hop_subgraph"],
     )
 
-    return random_data_aug, g_paramrs
+    return random_graph_data_aug, g_paramrs
 
 def get_scheduler(config, train_loader):
     nb_epochs = config["nb_epochs"]
