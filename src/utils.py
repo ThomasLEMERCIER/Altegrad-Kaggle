@@ -182,6 +182,9 @@ def load_pretraining_model(config):
         num_layers=gnn_num_layers,
     )
 
+    for params in teacher.parameters():
+        params.requires_grad = False
+
     return student, teacher
 
 def get_pretraining_dataloader(config, transform, transform_params):
