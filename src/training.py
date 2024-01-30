@@ -104,8 +104,7 @@ def pretraining_graph(train_loader, device, model_student, model_teacher, center
         for param_group in optimizer.param_groups:
             param_group["lr"] = scheduler[itx]
 
-        batch_u = batch["u"]
-        batch_v = batch["v"]
+        batch_u, batch_v = batch
 
         batch_u_x = batch_u.x.to(device)
         batch_u_edge_index = batch_u.edge_index.to(device)
