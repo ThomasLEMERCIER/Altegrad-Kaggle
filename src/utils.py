@@ -184,7 +184,6 @@ def get_pretraining_dataloader(config, transform, transform_params):
 
     train_dataset = GraphPretrainingDataset(
         root=ROOT_DATA,
-        split="train",
         in_memory=True,
         transform=transform,
         transform_params=transform_params,
