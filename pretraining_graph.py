@@ -79,6 +79,9 @@ if __name__ == "__main__":
     last_scheduler_update = 0
     momentum_teacher = cosineLR(nb_epochs, config["lr_teacher"], 1, len(train_loader))
 
+    # ==== Center ==== #
+    center = torch.zeros(config["nout"]).to(device)
+
     for e in range(start_epoch, start_epoch + nb_epochs):
         print("----- EPOCH {} -----".format(e))
 
