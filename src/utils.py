@@ -165,17 +165,21 @@ def load_pretraining_model(config):
     student = GraphEncoder(
         model_name=gnn_model_name,
         num_node_features=NODE_FEATURES_SIZE,
+        nout=nout,
+        nhid=mlp_hdim,
         graph_hidden_channels=gnn_hdim,
-        gnn_dropout=gnn_dropout,
-        gnn_num_layers=gnn_num_layers,
+        dropout=gnn_dropout,
+        num_layers=gnn_num_layers,
     )
 
     teacher = GraphEncoder(
         model_name=gnn_model_name,
         num_node_features=NODE_FEATURES_SIZE,
+        nout=nout,
+        nhid=mlp_hdim,
         graph_hidden_channels=gnn_hdim,
-        gnn_dropout=gnn_dropout,
-        gnn_num_layers=gnn_num_layers,
+        dropout=gnn_dropout,
+        num_layers=gnn_num_layers,
     )
 
     return student, teacher
