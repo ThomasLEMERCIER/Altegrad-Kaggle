@@ -273,7 +273,7 @@ class GraphPretrainingDataset(Dataset):
 
     def preprocess(self):
         num_workers = os.cpu_count()
-        files = [(file, idx) for idx, file in enumerate(os.listdir(osp.join(self.root, "raw")))]
+        files = [(file, idx) for idx, file in enumerate(os.listdir(osp.join(self.root, "raw"))) if file.endswith(".graph")]
         with ThreadPoolExecutor(max_workers=num_workers) as executor:
             futures = []
 
