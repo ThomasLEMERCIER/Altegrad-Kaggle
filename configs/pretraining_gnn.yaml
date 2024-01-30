@@ -20,7 +20,7 @@ nout: 768
 nb_epochs: 150
 batch_size: 128
 lr: 2.e-5
-weight_decay: 0.01
+weight_decay: 1.e-4
 
 # ==== Loss/Model options ==== #
 norm_loss: False
