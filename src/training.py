@@ -135,7 +135,7 @@ def pretraining_graph(train_loader, device, model_student, model_teacher, center
         if do_wandb:
             wandb.log({"training_loss_step": loss.item()})
 
-        center = momentum_center * center + (1 - momentum_center) * torch.stack([student_u.detach(), teacher_v.detach()], dim=0).mean(dim=0)       
+        center = momentum_center * center + (1 - momentum_center) * torch.concat([student_u.detach(), teacher_v.detach()], dim=0).mean(dim=0)       
 
     average_loss = total_loss / len(train_loader)
 
