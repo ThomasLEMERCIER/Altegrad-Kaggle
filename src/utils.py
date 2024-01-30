@@ -8,15 +8,10 @@ import numpy as np
 from torch_geometric.loader import DataLoader
 
 # Local application/library specific imports
-<<<<<<< HEAD
 from .model import Model, GraphEncoder
 from .dataset import GraphTextDataset, GraphPretrainingDataset
 from torch_geometric.loader import DataLoader
-=======
-from .model import Model
-from .dataset import GraphTextDataset
 from src.scheduler import warmup_cosineLR, constantLR
->>>>>>> main
 from .constants import CHECKPOINT_FOLDER, NODE_FEATURES_SIZE, ROOT_DATA, GT_PATH
 from .data_aug import DataAugParams, GraphDataAugParams, random_data_aug
 
