@@ -114,9 +114,8 @@ def pretraining_graph(train_loader, device, model_student, model_teacher, center
         student_u = model_student(batch_u)
         student_v = model_student(batch_v)
 
-        with torch.no_grad():
-            teacher_u = model_teacher(batch_u)
-            teacher_v = model_teacher(batch_v)
+        teacher_u = model_teacher(batch_u).detach()
+        teacher_v = model_teacher(batch_v).detach()
 
         loss = self_supervised_entropy(student_u, teacher_v, center, temperature_student, temperature_teacher) + self_supervised_entropy(student_v, teacher_u, center, temperature_student, temperature_teacher)
         total_loss += loss.item()
