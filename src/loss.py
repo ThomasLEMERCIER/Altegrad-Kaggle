@@ -18,8 +18,6 @@ def self_supervised_entropy(student_embedding, teacher_embedding, center, temper
     teacher_embedding: (batch_size, embedding_size)
     center: (embedding_size)
     """
-    print(student_embedding.shape, teacher_embedding.shape, center.shape)
-    print(temperature_student, temperature_teacher)
     s = torch.nn.functional.softmax(student_embedding / temperature_student, dim=1)
     t = torch.nn.functional.softmax((teacher_embedding - center) / temperature_teacher, dim=1)
     return torch.mean(torch.sum(-s * torch.log(t), dim=1))
