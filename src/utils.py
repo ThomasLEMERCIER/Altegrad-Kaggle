@@ -13,7 +13,7 @@ from .dataset import GraphTextDataset, GraphPretrainingDataset
 from torch_geometric.loader import DataLoader
 from src.scheduler import warmup_cosineLR, constantLR
 from .constants import CHECKPOINT_FOLDER, NODE_FEATURES_SIZE, ROOT_DATA, GT_PATH
-from .data_aug import DataAugParams, GraphDataAugParams, random_data_aug
+from .data_aug import DataAugParams, GraphDataAugParams, random_data_aug, random_graph_data_aug
 
 
 def load_config(config_path):
@@ -217,8 +217,27 @@ def get_transform(config):
         p_khop_subgraph=config["p_k_hop_subgraph"],
     )
 
-    return random_data_aug, DataAugParams(graph_params=g_paramrs)
+    return random_graph_data_aug, DataAugParams(graph_params=g_paramrs)
 
+def get_transform_gnn(config):
+    g_paramrs = GraphDataAugParams(
+        lambda_aug=config["lambda_aug"],
+        min_aug=config["min_aug"],
+        max_aug=config["max_aug"],
+        p_edge_pertubation=config["p_edge_pertubation"],
+        edge_pertubation=config["edge_pertubation"],
+        p_graph_sampling=config["p_graph_sampling"],
+        graph_sampling=config["graph_sampling"],
+        p_features_noise=config["p_features_noise"],
+        features_noise=config["features_noise"],
+        p_features_shuffling=config["p_features_shuffling"],
+        features_shuffling=config["features_shuffling"],
+        p_features_masking=config["p_features_masking"],
+        features_masking=config["features_masking"],
+        p_khop_subgraph=config["p_k_hop_subgraph"],
+    )
+
+    return random_data_aug, g_paramrs
 
 def get_scheduler(config, train_loader):
     nb_epochs = config["nb_epochs"]

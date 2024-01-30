@@ -14,7 +14,7 @@ import wandb
 from src.constants import *
 from src.scheduler import cosineLR
 from src.training import pretraining_graph
-from src.utils import load_config, load_pretraining_model, load_optimizer, get_pretraining_dataloader, save_checkpoint, get_transform, get_scheduler
+from src.utils import load_config, load_pretraining_model, load_optimizer, get_pretraining_dataloader, save_checkpoint, get_transform_gnn, get_scheduler
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -53,7 +53,7 @@ if __name__ == "__main__":
         wandb.config.update(config)
 
     # ==== Data augmentation ==== #
-    transform, transform_params = get_transform(config)
+    transform, transform_params = get_transform_gnn(config)
 
     # ===== Dataloaders ===== #
     print("Loading datasets")
