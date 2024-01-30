@@ -17,8 +17,8 @@ gnn_dropout: 0.2
 nout: 768
 
 # ==== Training parameters ==== #
-nb_epochs: 80
-batch_size: 128
+nb_epochs: 150
+batch_size: 320
 lr: 2.e-5
 weight_decay: 0.01
 
@@ -34,29 +34,29 @@ fine_tuning: False
 checkpoint_name: null
 
 # ==== Transform ==== #
-lambda_aug: 0.5
+lambda_aug: 1.5
 min_aug: 0
-max_aug: 1
+max_aug: 3
 
-p_edge_pertubation: 0
+p_edge_pertubation: 0.2
 edge_pertubation: 0.1
 
-p_graph_sampling: 0
-graph_sampling: 0.5
+p_graph_sampling: 0.4
+graph_sampling: 0.6
 
-p_features_noise: 0
+p_features_noise: 0.1
 features_noise: 0.1
 
-p_features_shuffling: 0
+p_features_shuffling: 0.1
 features_shuffling: 0.075
 
-p_features_masking: 0
+p_features_masking: 0.1
 features_masking: 0.15
 
-p_k_hop_subgraph: 1
+p_k_hop_subgraph: 0.1
 
 # ==== Scheduler ==== #
 scheduler: warmup_cosine
 warmup_epochs: 1
-eta_min: 1.e-6
+eta_min: 1.e-8
 eta_max: 1.e-4

@@ -18,7 +18,7 @@ nout: 768
 
 # ==== Training parameters ==== #
 nb_epochs: 40
-batch_size: 64
+batch_size: 256
 lr: 2.e-5
 weight_decay: 0.01
 
@@ -52,6 +52,8 @@ features_shuffling: 0.
 
 p_features_masking: 0.
 features_masking: 0
+
+p_k_hop_subgraph: 0
 
 # ==== Scheduler ==== #
 scheduler: warmup_cosine

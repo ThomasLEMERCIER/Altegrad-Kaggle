@@ -80,8 +80,10 @@ def load_checkpoint(model, optimizer, checkpoint_path):
     return model, optimizer
 
 
-def load_model_from_checkpoint(model, checkpoint_path):
-    model_checkpoint = torch.load(checkpoint_path)
+def load_model_from_checkpoint(model, checkpoint_path, device=None):
+    if device is None:
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model_checkpoint = torch.load(checkpoint_path, map_location=device)
     model.load_state_dict(model_checkpoint["model_state_dict"])
     return model
 
