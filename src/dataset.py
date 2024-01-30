@@ -306,15 +306,25 @@ class GraphPretrainingDataset(Dataset):
             data = self.data[idx].clone()
             v_x, v_edge_index = self.transform_data(data.x, data.edge_index, self.transform_data_params)
 
-            data = HeteroData()
+            # data = HeteroData()
 
-            data["u"].x = u_x
-            data["u"].edge_index = u_edge_index
+            # data["u"].x = u_x
+            # data["u"].edge_index = u_edge_index
 
-            data["v"].x = v_x
-            data["v"].edge_index = v_edge_index
+            # data["v"].x = v_x
+            # data["v"].edge_index = v_edge_index
 
-            return data
+            data_u = Data(
+                x=u_x,
+                edge_index=u_edge_index,
+            )
+
+            data_v = Data(
+                x=v_x,
+                edge_index=v_edge_index,
+            )
+
+            return data_u, data_v
         else:
             data = torch.load(osp.join(self.preprocessed_dir, "data_{}.pt".format(idx)))
 
@@ -323,12 +333,22 @@ class GraphPretrainingDataset(Dataset):
             data_clone = data.clone()
             v_x, v_edge_index = self.transform_data(data_clone.x, data_clone.edge_index, self.transform_data_params)
 
-            data = HeteroData()
+            # data = HeteroData()
 
-            data["u"].x = u_x
-            data["u"].edge_index = u_edge_index
+            # data["u"].x = u_x
+            # data["u"].edge_index = u_edge_index
 
-            data["v"].x = v_x
-            data["v"].edge_index = v_edge_index
+            # data["v"].x = v_x
+            # data["v"].edge_index = v_edge_index
 
-            return data
+            data_u = Data(
+                x=u_x,
+                edge_index=u_edge_index,
+            )
+
+            data_v = Data(
+                x=v_x,
+                edge_index=v_edge_index,
+            )
+
+            return data_u, data_v
