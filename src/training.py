@@ -118,9 +118,10 @@ def pretraining_graph(train_loader, device, model_student, model_teacher, center
             teacher_u = model_teacher(batch_u)
             teacher_v = model_teacher(batch_v)
 
-        loss_uv = self_supervised_entropy(student_u, teacher_v, center, temperature_student, temperature_teacher)
-        loss_vu = self_supervised_entropy(student_v, teacher_u, center, temperature_student, temperature_teacher)
-        loss = loss_uv + loss_vu
+        # loss_uv = self_supervised_entropy(student_u, teacher_v, center, temperature_student, temperature_teacher)
+        # loss_vu = self_supervised_entropy(student_v, teacher_u, center, temperature_student, temperature_teacher)
+        # loss = loss_uv + loss_vu
+        loss = self_supervised_entropy((student_u, student_v), (teacher_u, teacher_v), center, temperature_student, temperature_teacher)
 
         loss.backward()
         optimizer.step()
