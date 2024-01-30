@@ -94,7 +94,7 @@ if __name__ == "__main__":
             optimizer,
             scheduler,
             e,
-            config["do_wandb"],
+            args.wandb,
             config["momentum_center"],
             momentum_teacher,
             config["temperature_student"],
