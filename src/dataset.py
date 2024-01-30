@@ -269,7 +269,7 @@ class GraphPretrainingDataset(Dataset):
                     )
                 )
 
-        super(GraphDataset, self).__init__()
+        super(GraphPretrainingDataset, self).__init__()
 
     def preprocess(self):
         num_workers = os.cpu_count()
