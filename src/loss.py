@@ -12,17 +12,12 @@ def contrastive_loss(graph_embedding, text_embedding, normalize=False):
     labels = torch.arange(logits.shape[0], device=graph_embedding.device)
     return torch.nn.functional.cross_entropy(logits, labels) + torch.nn.functional.cross_entropy(torch.transpose(logits, 0, 1), labels)
 
-def self_supervised_entropy(students, teachers, center, temperature_student, temperature_teacher):
+def self_supervised_entropy(student_embedding, teacher_embedding, center, temperature_student, temperature_teacher):
     """
     student_embedding: (batch_size, embedding_size)
     teacher_embedding: (batch_size, embedding_size)
     center: (embedding_size)
     """
-    # s = torch.nn.functional.softmax(student_embedding / temperature_student, dim=1)
-    # t = torch.nn.functional.softmax((teacher_embedding - center) / temperature_teacher, dim=1)
-    # return torch.mean(torch.sum(-s * torch.log(t), dim=1))
-    s_u = torch.nn.functional.softmax(students[0] / temperature_student, dim=1)
-    s_v = torch.nn.functional.softmax(students[1] / temperature_student, dim=1)
-    t_u = torch.nn.functional.softmax((teachers[0] - center) / temperature_teacher, dim=1)
-    t_v = torch.nn.functional.softmax((teachers[1] - center) / temperature_teacher, dim=1)
-    return torch.mean(torch.sum(-s_u * torch.log(t_v), dim=1)) + torch.mean(torch.sum(-s_v * torch.log(t_u), dim=1))
+    s = torch.nn.functional.softmax(student_embedding / temperature_student, dim=1)
+    t = torch.nn.functional.softmax((teacher_embedding - center) / temperature_teacher, dim=1)
+    return torch.mean(torch.sum(-s * torch.log(t), dim=1))

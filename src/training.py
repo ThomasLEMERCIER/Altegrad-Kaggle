@@ -118,10 +118,9 @@ def pretraining_graph(train_loader, device, model_student, model_teacher, center
             teacher_u = model_teacher(batch_u)
             teacher_v = model_teacher(batch_v)
 
-        # loss_uv = self_supervised_entropy(student_u, teacher_v, center, temperature_student, temperature_teacher)
-        # loss_vu = self_supervised_entropy(student_v, teacher_u, center, temperature_student, temperature_teacher)
-        # loss = loss_uv + loss_vu
-        loss = self_supervised_entropy((student_u, student_v), (teacher_u, teacher_v), center, temperature_student, temperature_teacher)
+        loss_uv = self_supervised_entropy(student_u, teacher_v, center, temperature_student, temperature_teacher)
+        loss_vu = self_supervised_entropy(student_v, teacher_u, center, temperature_student, temperature_teacher)
+        loss = loss_uv + loss_vu
 
         loss.backward()
         optimizer.step()
@@ -136,7 +135,7 @@ def pretraining_graph(train_loader, device, model_student, model_teacher, center
         if do_wandb:
             wandb.log({"training_loss_step": loss.item()})
 
-        center = momentum_center * center + (1 - momentum_center) * torch.stack([student_u, teacher_v], dim=0).mean(dim=0)       
+        center = momentum_center * center + (1 - momentum_center) * torch.stack([student_u.detach(), teacher_v.detach()], dim=0).mean(dim=0)       
 
     average_loss = total_loss / len(train_loader)
 
