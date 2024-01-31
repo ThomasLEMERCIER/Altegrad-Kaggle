@@ -68,9 +68,13 @@ def load_model(config):
 def load_optimizer(model, config):
     lr = config["lr"]
     weight_decay = config["weight_decay"]
+    optimizer = config.get("optimizer", "adam")
 
-    optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
-    return optimizer
+    if optimizer == "adam":
+        return torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
+
+    elif optimizer == "adamw":
+        return torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
 
 
 def load_checkpoint(model, optimizer, checkpoint_path):

@@ -14,6 +14,7 @@ def contrastive_loss(graph_embedding, text_embedding, normalize=False, top_k=Non
     labels = torch.arange(logits.shape[0], device=graph_embedding.device)
 
     if top_k is not None:
+        top_k = min(top_k, logits.shape[0])
         return (
             torch.topk(
                 torch.nn.functional.cross_entropy(logits, labels, reduction="none"),
