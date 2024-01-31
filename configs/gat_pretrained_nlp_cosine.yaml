@@ -25,6 +25,7 @@ weight_decay: 0.01
 # ==== Loss/Model options ==== #
 norm_loss: False
 avg_pool_nlp: False
+top_k_loss: null
 
 # ==== NLP checkpoint ==== #
 nlp_checkpoint: checkpoint-7500

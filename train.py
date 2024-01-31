@@ -101,6 +101,7 @@ if __name__ == "__main__":
     best_validation_larp = 0
     nb_epochs = config["nb_epochs"]
     norm_loss = config["norm_loss"]
+    top_k_loss = config["top_k_loss"]
 
     # ==== Scheduler ==== #
     scheduler = get_scheduler(config, train_loader)
@@ -114,7 +115,15 @@ if __name__ == "__main__":
         print("----- EPOCH {} -----".format(e + 1))
 
         trainning_loss = train_epoch(
-            train_loader, device, model, optimizer, scheduler, e, args.wandb, norm_loss
+            train_loader,
+            device,
+            model,
+            optimizer,
+            scheduler,
+            e,
+            args.wandb,
+            norm_loss,
+            top_k_loss,
         )
         validation_loss, validation_lrap = validation_epoch(
             val_loader, device, model, norm_loss
