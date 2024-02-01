@@ -69,13 +69,16 @@ def load_model(config):
 def load_optimizer(model, config):
     lr = config["lr"]
     weight_decay = config["weight_decay"]
-    optimizer = config.get("optimizer", "adam")
+    optimizer = config["optimizer"]
 
     if optimizer == "adam":
         return torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
 
     elif optimizer == "adamw":
         return torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
+    
+    else:
+        raise ValueError("Optimizer not implemented")
 
 
 def load_checkpoint(model, optimizer, checkpoint_path):
@@ -279,7 +282,7 @@ def update_decay_scheduler(scheduler, decay_factor, current_step):
 
 
 def get_top_k_scheduler(config, nb_epochs):
-    if config.get("top_k_scheduler", None) == None:
+    if config["top_k_scheduler"] is None:
         return None
 
     top_k_scheduler = np.linspace(

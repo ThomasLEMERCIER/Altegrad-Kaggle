@@ -26,6 +26,11 @@ weight_decay: 0.01
 norm_loss: False
 avg_pool_nlp: False
 top_k_loss: null
+top_k_loss: null
+top_k_scheduler:
+  start: null
+  end: null
+optimizer: adam
 
 # ==== NLP checkpoint ==== #
 nlp_checkpoint: checkpoint-7500

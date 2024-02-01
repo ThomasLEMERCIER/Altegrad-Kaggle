@@ -103,7 +103,7 @@ if __name__ == "__main__":
     best_validation_larp = 0
     nb_epochs = config["nb_epochs"]
     norm_loss = config["norm_loss"]
-    top_k = config.get("top_k_loss", None)
+    top_k = config["top_k_loss"]
     top_k_scheduler = get_top_k_scheduler(config, nb_epochs)
 
     # ==== Scheduler ==== #
