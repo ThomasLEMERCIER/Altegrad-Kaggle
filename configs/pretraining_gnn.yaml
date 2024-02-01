@@ -36,7 +36,7 @@ checkpoint_name: null
 # ==== Transform ==== #
 lambda_aug: 1.5
 min_aug: 1
-max_aug: 6
+max_aug: 5
 
 p_edge_pertubation: 0.2
 edge_pertubation: 0.1
