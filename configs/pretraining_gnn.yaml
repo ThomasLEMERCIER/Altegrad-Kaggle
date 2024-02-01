@@ -63,6 +63,6 @@ eta_max: 1.e-5
 
 # === Pretraining === #
 momentum_center: 0.9
-lr_teacher: 0.996
+lr_teacher: 0.994
 temperature_student: 0.1
 temperature_teacher: 0.04
