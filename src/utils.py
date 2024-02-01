@@ -34,6 +34,7 @@ def load_model(config):
     gnn_dropout = config["gnn_dropout"]
     gnn_hdim = config["gnn_hdim"]
     mlp_hdim = config["mlp_hdim"]
+    gnn_pretrained = config.get("gnn_pretrained", False)
 
     # ==== Output parameters ==== #
     nout = config["nout"]
@@ -50,8 +51,16 @@ def load_model(config):
             CHECKPOINT_FOLDER, "pretraining", nlp_model_name, nlp_checkpoint
         )
 
+    # === GNN checkpoint === #
+    gnn_checkpoint = config.get("gnn_checkpoint", None)
+    if not gnn_pretrained:
+        gnn_checkpoint = None
+    else:
+        gnn_checkpoint = osp.join(
+            CHECKPOINT_FOLDER, "pretraining", gnn_model_name, gnn_checkpoint
+        )
+
     model = Model(
-        nlp_model_name=nlp_model_name,
         gnn_model_name=gnn_model_name,
         num_node_features=NODE_FEATURES_SIZE,
         graph_hidden_channels=gnn_hdim,
@@ -59,6 +68,9 @@ def load_model(config):
         nout=nout,
         gnn_dropout=gnn_dropout,
         gnn_num_layers=gnn_num_layers,
+        gnn_checkpoint=gnn_checkpoint,
+
+        nlp_model_name=nlp_model_name,
         nlp_checkpoint=nlp_checkpoint,
         avg_pool_nlp=avg_pool_nlp,
     )

@@ -71,6 +71,7 @@ class Model(nn.Module):
         nout,
         gnn_dropout=0,
         gnn_num_layers=3,
+        gnn_checkpoint=None,
         nlp_checkpoint=None,
         avg_pool_nlp=False,
     ):
@@ -85,6 +86,9 @@ class Model(nn.Module):
             dropout=gnn_dropout,
             num_layers=gnn_num_layers
         )
+
+        if gnn_checkpoint is not None:
+            self.graph_encoder.load_state_dict(torch.load(gnn_checkpoint)["model_state_dict"])
         
         self.text_encoder = TextEncoder(model_name=nlp_model_name, checkpoint=nlp_checkpoint, avg_pool=avg_pool_nlp)
 
