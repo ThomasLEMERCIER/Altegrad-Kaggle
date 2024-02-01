@@ -224,7 +224,7 @@ def get_top_k_scheduler(config, nb_epochs):
 
 
 def update_top_k(top_k, top_k_scheduler, current_epoch):
-    if top_k_scheduler == None:
+    if top_k_scheduler is None:
         return top_k
 
     return top_k_scheduler[current_epoch]
