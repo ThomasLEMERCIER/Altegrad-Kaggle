@@ -71,7 +71,6 @@ if __name__ == "__main__":
 
     # ==== Optimizer ==== #
     optimizer = load_optimizer(student, config)
-    start_epoch = 1
     nb_epochs = config["nb_epochs"]
 
     # ==== Scheduler ==== #
@@ -82,8 +81,8 @@ if __name__ == "__main__":
     # ==== Center ==== #
     center = torch.zeros(config["nout"]).to(device)
 
-    for e in range(start_epoch, start_epoch + nb_epochs):
-        print("----- EPOCH {} -----".format(e))
+    for e in range(nb_epochs):
+        print("----- EPOCH {} -----".format(e+1))
 
         training_loss, center = pretraining_graph(
             train_loader,
