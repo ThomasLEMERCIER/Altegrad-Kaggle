@@ -25,6 +25,11 @@ weight_decay: 0.01
 # ==== Loss/Model options ==== #
 norm_loss: True
 avg_pool_nlp: False
+top_k_loss: null
+top_k_scheduler:
+  start: null
+  end: null
+optimizer: adam
 
 # ==== NLP checkpoint ==== #
 nlp_checkpoint: null

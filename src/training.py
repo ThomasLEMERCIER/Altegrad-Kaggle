@@ -8,7 +8,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 # Local application/library specific imports
 from src.constants import *
-from src.loss import contrastive_loss
+from src.loss import contrastive_loss, self_supervised_entropy
 
 
 def train_epoch(
@@ -103,3 +103,50 @@ def validation_epoch(val_loader, device, model, norm_loss):
     lrap = label_ranking_average_precision(text_embeddings, graph_embeddings)
 
     return average_loss, lrap
+
+def pretraining_graph(train_loader, device, model_student, model_teacher, center, optimizer, scheduler, epoch, do_wandb, momentum_center, momentum_teacher, temperature_student, temperature_teacher):
+    model_student.train()
+    model_teacher.eval()
+    total_loss = 0
+
+    for it, batch in enumerate(tqdm(train_loader, desc="Training")):
+        itx = it + len(train_loader) * epoch
+        for param_group in optimizer.param_groups:
+            param_group["lr"] = scheduler[itx]
+
+        batch_u, batch_v = batch
+
+        batch_u = batch_u.to(device)
+        batch_v = batch_v.to(device)
+
+        optimizer.zero_grad()
+
+        student_u = model_student(batch_u)
+        student_v = model_student(batch_v)
+
+        with torch.no_grad():
+            teacher_u = model_teacher(batch_u)
+            teacher_v = model_teacher(batch_v)
+
+        loss_uv = self_supervised_entropy(student_u, teacher_v, center, temperature_student, temperature_teacher)
+        loss_vu = self_supervised_entropy(student_v, teacher_u, center, temperature_student, temperature_teacher)
+        loss = loss_uv + loss_vu
+
+        loss.backward()
+        optimizer.step()
+
+        total_loss += loss.item()
+
+        # ema update for teacher model
+        lr_teacher = momentum_teacher[itx]
+        for param_s, param_t in zip(model_student.parameters(), model_teacher.parameters()):
+            param_t.data = lr_teacher * param_t.data + (1 - lr_teacher) * param_s.detach().data
+
+        if do_wandb:
+            wandb.log({"training_loss_step": loss.item(), "lr": scheduler[itx], "lr_teacher": lr_teacher})
+
+        center = momentum_center * center + (1 - momentum_center) * torch.concat([student_u.detach(), teacher_v.detach()], dim=0).mean(dim=0)       
+
+    average_loss = total_loss / len(train_loader)
+
+    return average_loss, center

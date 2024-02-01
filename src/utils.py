@@ -8,11 +8,12 @@ import numpy as np
 from torch_geometric.loader import DataLoader
 
 # Local application/library specific imports
-from .model import Model
-from .dataset import GraphTextDataset
+from .model import Model, GraphEncoder
+from .dataset import GraphTextDataset, GraphPretrainingDataset
+from torch_geometric.loader import DataLoader
 from src.scheduler import warmup_cosineLR, constantLR
 from .constants import CHECKPOINT_FOLDER, NODE_FEATURES_SIZE, ROOT_DATA, GT_PATH
-from .data_aug import DataAugParams, GraphDataAugParams, random_data_aug
+from .data_aug import DataAugParams, GraphDataAugParams, random_data_aug, random_graph_data_aug
 
 
 def load_config(config_path):
@@ -68,13 +69,16 @@ def load_model(config):
 def load_optimizer(model, config):
     lr = config["lr"]
     weight_decay = config["weight_decay"]
-    optimizer = config.get("optimizer", "adam")
+    optimizer = config["optimizer"]
 
     if optimizer == "adam":
         return torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
 
     elif optimizer == "adamw":
         return torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
+    
+    else:
+        raise ValueError("Optimizer not implemented")
 
 
 def load_checkpoint(model, optimizer, checkpoint_path):
@@ -154,6 +158,56 @@ def get_dataloaders(
 
     return train_loader, val_loader
 
+def load_pretraining_model(config):
+     # ==== GNN parameters ==== #
+    gnn_model_name = config["gnn_model_name"]
+    gnn_num_layers = config["gnn_num_layers"]
+    gnn_dropout = config["gnn_dropout"]
+    gnn_hdim = config["gnn_hdim"]
+    mlp_hdim = config["mlp_hdim"]
+
+    # ==== Output parameters ==== #
+    nout = config["nout"]
+
+    student = GraphEncoder(
+        model_name=gnn_model_name,
+        num_node_features=NODE_FEATURES_SIZE,
+        nout=nout,
+        nhid=mlp_hdim,
+        graph_hidden_channels=gnn_hdim,
+        dropout=gnn_dropout,
+        num_layers=gnn_num_layers,
+    )
+
+    teacher = GraphEncoder(
+        model_name=gnn_model_name,
+        num_node_features=NODE_FEATURES_SIZE,
+        nout=nout,
+        nhid=mlp_hdim,
+        graph_hidden_channels=gnn_hdim,
+        dropout=gnn_dropout,
+        num_layers=gnn_num_layers,
+    )
+
+    for params in teacher.parameters():
+        params.requires_grad = False
+
+    return student, teacher
+
+def get_pretraining_dataloader(config, transform, transform_params):
+    gt = np.load(GT_PATH, allow_pickle=True)[()]
+
+    train_dataset = GraphPretrainingDataset(
+        root=ROOT_DATA,
+        gt=gt,
+        in_memory=True,
+        transform=transform,
+        transform_params=transform_params,
+    )
+
+    train_loader = DataLoader(train_dataset, batch_size=config["batch_size"], shuffle=True, num_workers=1)
+
+    return train_loader
 
 def get_transform(config):
     g_paramrs = GraphDataAugParams(
@@ -175,6 +229,25 @@ def get_transform(config):
 
     return random_data_aug, DataAugParams(graph_params=g_paramrs)
 
+def get_transform_gnn(config):
+    g_paramrs = GraphDataAugParams(
+        lambda_aug=config["lambda_aug"],
+        min_aug=config["min_aug"],
+        max_aug=config["max_aug"],
+        p_edge_pertubation=config["p_edge_pertubation"],
+        edge_pertubation=config["edge_pertubation"],
+        p_graph_sampling=config["p_graph_sampling"],
+        graph_sampling=config["graph_sampling"],
+        p_features_noise=config["p_features_noise"],
+        features_noise=config["features_noise"],
+        p_features_shuffling=config["p_features_shuffling"],
+        features_shuffling=config["features_shuffling"],
+        p_features_masking=config["p_features_masking"],
+        features_masking=config["features_masking"],
+        p_khop_subgraph=config["p_k_hop_subgraph"],
+    )
+
+    return random_graph_data_aug, g_paramrs
 
 def get_scheduler(config, train_loader):
     nb_epochs = config["nb_epochs"]
@@ -209,7 +282,7 @@ def update_decay_scheduler(scheduler, decay_factor, current_step):
 
 
 def get_top_k_scheduler(config, nb_epochs):
-    if config.get("top_k_scheduler", None) == None:
+    if config["top_k_scheduler"] is None:
         return None
 
     top_k_scheduler = np.linspace(

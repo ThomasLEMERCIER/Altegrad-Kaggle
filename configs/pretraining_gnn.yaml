@@ -1,5 +1,5 @@
 # ==== Run name ==== #
-name: gat_pretrained_nlp_cosine_aug
+name: pretraining_gat
 
 # ==== Nlp model parameters ==== #
 nlp_model_name: distilbert-base-uncased
@@ -17,19 +17,15 @@ gnn_dropout: 0.2
 nout: 768
 
 # ==== Training parameters ==== #
-nb_epochs: 60
+nb_epochs: 15
 batch_size: 256
 lr: 2.e-5
-weight_decay: 0.00001
+weight_decay: 1.e-4
 
 # ==== Loss/Model options ==== #
 norm_loss: False
 avg_pool_nlp: False
-top_k_loss: null
-top_k_scheduler:
-  start: null
-  end: null
-optimizer: adam
+optimizer: adamw
 
 # ==== NLP checkpoint ==== #
 nlp_checkpoint: checkpoint-7500
@@ -39,29 +35,35 @@ fine_tuning: False
 checkpoint_name: null
 
 # ==== Transform ==== #
-lambda_aug: 0.4
-min_aug: 0
-max_aug: 1
+lambda_aug: 1.5
+min_aug: 1
+max_aug: 5
 
 p_edge_pertubation: 0.2
 edge_pertubation: 0.1
 
 p_graph_sampling: 0.4
-graph_sampling: 0.8
+graph_sampling: 0.6
 
-p_features_noise: 0.1
-features_noise: 0.1
+p_features_noise: 0.15
+features_noise: 0.05
 
-p_features_shuffling: 0.1
+p_features_shuffling: 0
 features_shuffling: 0.075
 
 p_features_masking: 0.1
 features_masking: 0.15
 
-p_k_hop_subgraph: 0.1
+p_k_hop_subgraph: 0.15
 
 # ==== Scheduler ==== #
 scheduler: warmup_cosine
 warmup_epochs: 1
 eta_min: 1.e-8
-eta_max: 1.e-4
+eta_max: 1.e-5
+
+# === Pretraining === #
+momentum_center: 0.9
+lr_teacher: 0.994
+temperature_student: 0.1
+temperature_teacher: 0.04
