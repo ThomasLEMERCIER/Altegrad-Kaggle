@@ -18,14 +18,17 @@ nout: 768
 
 # ==== Training parameters ==== #
 nb_epochs: 40
-batch_size: 256
+batch_size: 512
 lr: 2.e-5
 weight_decay: 0.01
 
 # ==== Loss/Model options ==== #
 norm_loss: False
 avg_pool_nlp: False
-top_k_loss: null
+top_k_loss: 440
+top_k_scheduler:
+  start: 512
+  end: 210
 optimizer: adamw
 
 # ==== NLP checkpoint ==== #

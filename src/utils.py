@@ -206,3 +206,25 @@ def update_decay_scheduler(scheduler, decay_factor, current_step):
     scheduler[current_step:] *= decay_factor
 
     return scheduler
+
+
+def get_top_k_scheduler(config, nb_epochs):
+    if config.get("top_k_scheduler", None) == None:
+        return None
+
+    top_k_scheduler = np.linspace(
+        config["top_k_scheduler"]["start"],
+        config["top_k_scheduler"]["end"],
+        nb_epochs,
+    )
+
+    top_k_scheduler = top_k_scheduler.astype(int)
+
+    return top_k_scheduler
+
+
+def update_top_k(top_k, top_k_scheduler, current_epoch):
+    if top_k_scheduler == None:
+        return top_k
+
+    return top_k_scheduler[current_epoch]
