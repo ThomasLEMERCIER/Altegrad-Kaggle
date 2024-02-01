@@ -306,14 +306,6 @@ class GraphPretrainingDataset(Dataset):
             data = self.data[idx].clone()
             v_x, v_edge_index = self.transform_data(data.x, data.edge_index, self.transform_data_params)
 
-            # data = HeteroData()
-
-            # data["u"].x = u_x
-            # data["u"].edge_index = u_edge_index
-
-            # data["v"].x = v_x
-            # data["v"].edge_index = v_edge_index
-
             data_u = Data(
                 x=u_x,
                 edge_index=u_edge_index,
@@ -332,14 +324,6 @@ class GraphPretrainingDataset(Dataset):
             u_x, u_edge_index = self.transform_data(data_clone.x, data_clone.edge_index, self.transform_data_params)
             data_clone = data.clone()
             v_x, v_edge_index = self.transform_data(data_clone.x, data_clone.edge_index, self.transform_data_params)
-
-            # data = HeteroData()
-
-            # data["u"].x = u_x
-            # data["u"].edge_index = u_edge_index
-
-            # data["v"].x = v_x
-            # data["v"].edge_index = v_edge_index
 
             data_u = Data(
                 x=u_x,
