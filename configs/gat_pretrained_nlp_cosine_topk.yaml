@@ -17,15 +17,19 @@ gnn_dropout: 0.2
 nout: 768
 
 # ==== Training parameters ==== #
-nb_epochs: 40
-batch_size: 256
+nb_epochs: 80
+batch_size: 440
 lr: 2.e-5
-weight_decay: 0.01
+weight_decay: 0.00002
 
 # ==== Loss/Model options ==== #
 norm_loss: False
 avg_pool_nlp: False
-top_k_loss: null
+top_k_loss: 440
+top_k_scheduler:
+  start: 440
+  end: 180
+optimizer: adamw
 
 # ==== NLP checkpoint ==== #
 nlp_checkpoint: checkpoint-7500

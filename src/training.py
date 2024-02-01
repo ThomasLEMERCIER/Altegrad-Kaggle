@@ -12,7 +12,15 @@ from src.loss import contrastive_loss, self_supervised_entropy
 
 
 def train_epoch(
-    train_loader, device, model, optimizer, scheduler, epoch, do_wandb, norm_loss
+    train_loader,
+    device,
+    model,
+    optimizer,
+    scheduler,
+    epoch,
+    do_wandb,
+    norm_loss,
+    top_k=None,
 ):
     model.train()
     total_loss = 0
@@ -37,7 +45,9 @@ def train_epoch(
         graph_embeddings, text_embeddings = model(
             graph_batch, input_ids, attention_mask
         )
-        loss = contrastive_loss(graph_embeddings, text_embeddings, normalize=norm_loss)
+        loss = contrastive_loss(
+            graph_embeddings, text_embeddings, normalize=norm_loss, top_k=top_k
+        )
         total_loss += loss.item()
 
         loss.backward()

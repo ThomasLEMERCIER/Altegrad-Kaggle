@@ -17,14 +17,15 @@ gnn_dropout: 0.2
 nout: 768
 
 # ==== Training parameters ==== #
-nb_epochs: 150
-batch_size: 320
+nb_epochs: 60
+batch_size: 256
 lr: 2.e-5
-weight_decay: 0.01
+weight_decay: 0.00001
 
 # ==== Loss/Model options ==== #
 norm_loss: False
 avg_pool_nlp: False
+top_k_loss: null
 
 # ==== NLP checkpoint ==== #
 nlp_checkpoint: checkpoint-7500
@@ -34,15 +35,15 @@ fine_tuning: False
 checkpoint_name: null
 
 # ==== Transform ==== #
-lambda_aug: 1.5
+lambda_aug: 0.4
 min_aug: 0
-max_aug: 3
+max_aug: 1
 
 p_edge_pertubation: 0.2
 edge_pertubation: 0.1
 
 p_graph_sampling: 0.4
-graph_sampling: 0.6
+graph_sampling: 0.8
 
 p_features_noise: 0.1
 features_noise: 0.1
