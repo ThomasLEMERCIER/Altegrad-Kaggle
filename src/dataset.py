@@ -336,3 +336,148 @@ class GraphPretrainingDataset(Dataset):
             )
 
             return data_u, data_v
+
+class MultiDataset(Dataset):
+    """
+    Dataset for the (graph, text) pairs and graph only
+    """
+
+    def __init__(
+        self,
+        root,
+        gt,
+        split,
+        tokenizer,
+        nlp_model,
+        in_memory=True,
+        transform=None,
+        transform_params=None,
+    ):
+        self.root = root
+        self.gt = gt
+        self.split = split
+        self.nlp_model = nlp_model
+        self.tokenizer = tokenizer
+        self.in_memory = in_memory
+        self.data_transform = (
+            transform  # not overwriting the transform method of Dataset
+        )
+        self.data_transform_params = (
+            transform_params  # not overwriting the transform method of Dataset
+        )
+        self.description = (
+            pd.read_csv(osp.join(self.root, split + ".tsv"), sep="\t", header=None)
+            .set_index(0)[1]
+            .to_dict()
+        )
+        self.cids = list(self.description.keys())
+
+        self.preprocessed_dir = osp.join(
+            self.root, "preprocessed", "multi", self.nlp_model, self.split
+        )
+        if not os.path.exists(self.preprocessed_dir):
+            os.makedirs(self.preprocessed_dir)
+            self.preprocess()
+        
+        self.size = len([file for file in os.listdir(self.preprocessed_dir) if file.endswith(".pt")])
+        self.labeled_size = len(self.cids)
+        if self.in_memory:
+            self.data = []
+            for idx in tqdm(range(self.len()), desc="Loading data"):
+                self.data.append(
+                    torch.load(
+                        osp.join(self.preprocessed_dir, "data_{}.pt".format(idx))
+                    )
+                )
+
+        super(MultiDataset, self).__init__()
+
+    def preprocess(self):
+        os.environ["TOKENIZERS_PARALLELISM"] = "false"
+        num_workers = os.cpu_count()
+        all_graphs = [file for file in os.listdir(osp.join(self.root, "raw")) if file.endswith(".graph")]
+        only_graphs = list(filter(lambda x: x.split(".")[0] in self.cids, all_graphs))
+        files_to_process = [(cid, idx, True) for idx, cid in enumerate(self.cids)] + [(file, idx+len(self.cids), False) for idx, file in enumerate(only_graphs)]
+
+        with ThreadPoolExecutor(max_workers=num_workers) as executor:
+            futures = []
+
+            for file_info in tqdm(files_to_process, desc="Preprocessing"):
+                future = executor.submit(self.process_single, file_info)
+                futures.append(future)
+
+            # Wait for all futures to complete
+            for future in tqdm(futures, desc="Processing Complete", total=len(futures)):
+                future.result()
+        os.environ["TOKENIZERS_PARALLELISM"] = "true"
+
+    def process_single(self, file_info):
+        if file_info[2]:
+            cid = file_info[0]
+            raw_path = osp.join(self.root, "raw", str(cid) + ".graph")
+            edge_index, x = process_graph(raw_path, self.gt)
+            text = self.description[cid]
+            input_ids, attention_mask = process_text(text, self.tokenizer)
+            data = Data(
+                x=x,
+                edge_index=edge_index,
+                input_ids=input_ids,
+                attention_mask=attention_mask,
+                has_text=True
+            )
+            torch.save(data, osp.join(self.preprocessed_dir, "data_{}.pt".format(file_info[1])))
+        else:
+            raw_path = osp.join(self.root, "raw", file_info[0])
+            edge_index, x = process_graph(raw_path, self.gt)
+            data = Data(
+                x=x,
+                edge_index=edge_index,
+                attention_mask=None,
+                input_ids=None,
+                has_text=False
+            )
+            torch.save(data, osp.join(self.preprocessed_dir, "data_{}.pt".format(file_info[1])))
+
+    def len(self):
+        return self.size
+
+    def get(self, idx):
+        if self.in_memory:
+            if self.data_transform is not None:
+                data = self.data[idx].clone()
+                has_text = data.has_text
+                data = Data(
+                    x=data.x,
+                    edge_index=data.edge_index,
+                    input_ids=data.input_ids,
+                    attention_mask=data.attention_mask,
+                )
+                data = self.data_transform(data, self.data_transform_params)
+                return Data(
+                    x=data.x,
+                    edge_index=data.edge_index,
+                    input_ids=data.input_ids,
+                    attention_mask=data.attention_mask,
+                    has_text=has_text
+                )
+            return self.data[idx]
+        else:
+            data = torch.load(osp.join(self.preprocessed_dir, "data_{}.pt".format(idx)))
+
+            if self.data_transform is not None:
+                has_text = data.has_text
+                data = Data(
+                    x=data.x,
+                    edge_index=data.edge_index,
+                    input_ids=data.input_ids,
+                    attention_mask=data.attention_mask,
+                )
+                data = self.data_transform(data, self.data_transform_params)
+                return Data(
+                    x=data.x,
+                    edge_index=data.edge_index,
+                    input_ids=data.input_ids,
+                    attention_mask=data.attention_mask,
+                    has_text=has_text
+                )
+            return data
