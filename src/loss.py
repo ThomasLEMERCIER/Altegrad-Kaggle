@@ -45,19 +45,19 @@ def contrastive_loss_with_unlabeled(graph_embedding, text_embedding, has_text, n
         top_k = min(top_k, logits.shape[0])
         return (
             torch.topk(
-                torch.nn.functional.cross_entropy(logits, labels, reduction="none"),
+                torch.nn.functional.cross_entropy(logits[has_text, :], labels[has_text, :], reduction="none"),
                 top_k,
             ).values.mean()
             + torch.topk(
                 torch.nn.functional.cross_entropy(
-                    torch.transpose(logits, 0, 1), labels, reduction="none"
+                    torch.transpose(logits, 0, 1), labels.transpose(0, 1), reduction="none"
                 ),
                 top_k,
             ).values.mean()
         )
     return torch.nn.functional.cross_entropy(
-        logits, labels
-    ) + torch.nn.functional.cross_entropy(torch.transpose(logits, 0, 1), labels)
+        logits[has_text, :], labels[has_text, :]
+    ) + torch.nn.functional.cross_entropy(torch.transpose(logits, 0, 1), labels.transpose(0, 1))
 
 def self_supervised_entropy(student_embedding, teacher_embedding, center, temperature_student, temperature_teacher, eps=1e-6):
     """

@@ -71,5 +71,5 @@ eta_min: 1.e-8
 eta_max: 1.e-4
 
 # === Data === #
-use_unlabled: true
+use_unlabeled: true
 unlabeled_samples_share: 0.2

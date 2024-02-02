@@ -373,7 +373,7 @@ class MultiDataset(Dataset):
         self.cids = list(self.description.keys())
 
         self.preprocessed_dir = osp.join(
-            self.root, "preprocessed", "multi", self.nlp_model, self.split
+            self.root, "preprocessed", self.nlp_model, "multi", self.split
         )
         if not os.path.exists(self.preprocessed_dir):
             os.makedirs(self.preprocessed_dir)
