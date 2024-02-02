@@ -433,11 +433,12 @@ class MultiDataset(Dataset):
         else:
             raw_path = osp.join(self.root, "raw", file_info[0])
             edge_index, x = process_graph(raw_path, self.gt)
+            input_ids, attention_mask = process_text("", self.tokenizer)
             data = Data(
                 x=x,
                 edge_index=edge_index,
-                attention_mask=torch.empty(0),
-                input_ids=torch.empty(0),
+                attention_mask=attention_mask,
+                input_ids=input_ids,
                 has_text=False
             )
             torch.save(data, osp.join(self.preprocessed_dir, "data_{}.pt".format(file_info[1])))
