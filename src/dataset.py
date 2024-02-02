@@ -373,7 +373,7 @@ class MultiDataset(Dataset):
         self.val_cids = list(pd.read_csv(osp.join(self.root, "train" + ".tsv"), sep="\t", header=None).set_index(0)[1].to_dict().keys())
 
         self.preprocessed_dir = osp.join(
-            self.root, "preprocessed", self.nlp_model, "multi", self.split
+            self.root, "preprocessed", self.nlp_model, "multi",
         )
         if not os.path.exists(self.preprocessed_dir):
             os.makedirs(self.preprocessed_dir)
