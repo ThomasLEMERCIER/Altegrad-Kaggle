@@ -8,7 +8,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 # Local application/library specific imports
 from src.constants import *
-from src.loss import contrastive_loss, self_supervised_entropy
+from src.loss import contrastive_loss, self_supervised_entropy, contrastive_loss_with_unlabeled
 
 
 def train_epoch(
@@ -47,6 +47,62 @@ def train_epoch(
         )
         loss = contrastive_loss(
             graph_embeddings, text_embeddings, normalize=norm_loss, top_k=top_k
+        )
+        total_loss += loss.item()
+
+        loss.backward()
+        optimizer.step()
+
+        if do_wandb:
+            wandb.log({"training_loss_step": loss.item(), "lr": scheduler[itx]})
+
+    average_loss = total_loss / len(train_loader)
+
+    return average_loss
+
+def train_epoch_all(
+    train_loader,
+    device,
+    model,
+    optimizer,
+    scheduler,
+    epoch,
+    do_wandb,
+    norm_loss,
+    top_k=None,
+):
+    model.train()
+    total_loss = 0
+
+    for it, batch in enumerate(tqdm(train_loader, desc="Training")):
+        itx = it + len(train_loader) * epoch
+        for param_group in optimizer.param_groups:
+            param_group["lr"] = scheduler[itx]
+
+        input_ids = batch.input_ids
+        attention_mask = batch.attention_mask
+        has_text = batch.has_text
+        batch.pop("input_ids")
+        batch.pop("attention_mask")
+        batch.pop("has_text")
+        graph_batch = batch
+
+        input_ids = input_ids.to(device)
+        attention_mask = attention_mask.to(device)
+        has_text = has_text.to(device)
+        graph_batch = graph_batch.to(device)
+
+        input_ids = input_ids[has_text]
+        attention_mask = attention_mask[has_text]
+
+
+        optimizer.zero_grad()
+
+        graph_embeddings, text_embeddings = model(graph_batch, input_ids, attention_mask) # shape: (batch_size, nout), (batch_size - no_text, nout)
+
+
+        loss = contrastive_loss_with_unlabeled(
+            graph_embeddings, text_embeddings, has_text, normalize=norm_loss, top_k=top_k
         )
         total_loss += loss.item()
 

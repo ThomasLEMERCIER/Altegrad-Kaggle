@@ -13,7 +13,7 @@ from transformers import AutoTokenizer
 
 # Local application/library specific imports
 from src.constants import *
-from src.training import train_epoch, validation_epoch
+from src.training import train_epoch, validation_epoch, train_epoch_all
 from src.utils import (
     load_checkpoint,
     load_config,
@@ -110,6 +110,9 @@ if __name__ == "__main__":
     scheduler = get_scheduler(config, train_loader)
     last_scheduler_update = 0
 
+    # === Training === #
+    use_unlabeled = config.get("use_unlabeled", False)
+
     if config["fine_tuning"]:
         checkpoint_path = osp.join(CHECKPOINT_FOLDER, config["checkpoint_name"])
         model, optimizer = load_checkpoint(model, optimizer, checkpoint_path)
@@ -118,17 +121,30 @@ if __name__ == "__main__":
         print("----- EPOCH {} -----".format(e + 1))
         top_k = update_top_k(top_k, top_k_scheduler, e)
 
-        trainning_loss = train_epoch(
-            train_loader,
-            device,
-            model,
-            optimizer,
-            scheduler,
-            e,
-            args.wandb,
-            norm_loss,
-            top_k,
-        )
+        if use_unlabeled:
+            trainning_loss = train_epoch_all(
+                train_loader,
+                device,
+                model,
+                optimizer,
+                scheduler,
+                e,
+                args.wandb,
+                norm_loss,
+                top_k,
+            )
+        else:
+            trainning_loss = train_epoch(
+                train_loader,
+                device,
+                model,
+                optimizer,
+                scheduler,
+                e,
+                args.wandb,
+                norm_loss,
+                top_k,
+            )
         validation_loss, validation_lrap = validation_epoch(
             val_loader, device, model, norm_loss
         )
