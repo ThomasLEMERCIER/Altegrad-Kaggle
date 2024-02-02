@@ -14,7 +14,12 @@ from .dataset import GraphTextDataset, GraphPretrainingDataset, MultiDataset
 from torch_geometric.loader import DataLoader
 from src.scheduler import warmup_cosineLR, constantLR
 from .constants import CHECKPOINT_FOLDER, NODE_FEATURES_SIZE, ROOT_DATA, GT_PATH
-from .data_aug import DataAugParams, GraphDataAugParams, random_data_aug, random_graph_data_aug
+from .data_aug import (
+    DataAugParams,
+    GraphDataAugParams,
+    random_data_aug,
+    random_graph_data_aug,
+)
 
 
 def load_config(config_path):
@@ -70,7 +75,6 @@ def load_model(config):
         gnn_dropout=gnn_dropout,
         gnn_num_layers=gnn_num_layers,
         gnn_checkpoint=gnn_checkpoint,
-
         nlp_model_name=nlp_model_name,
         nlp_checkpoint=nlp_checkpoint,
         avg_pool_nlp=avg_pool_nlp,
@@ -89,7 +93,7 @@ def load_optimizer(model, config):
 
     elif optimizer == "adamw":
         return torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
-    
+
     else:
         raise ValueError("Optimizer not implemented")
 
@@ -142,7 +146,7 @@ def get_dataloaders(
             drop_last=False,
         )
         return val_loader
-    
+
     if config.get("use_unlabeled", False):
         train_dataset = MultiDataset(
             root=ROOT_DATA,
@@ -196,8 +200,9 @@ def get_dataloaders(
 
     return train_loader, val_loader
 
+
 def load_pretraining_model(config):
-     # ==== GNN parameters ==== #
+    # ==== GNN parameters ==== #
     gnn_model_name = config["gnn_model_name"]
     gnn_num_layers = config["gnn_num_layers"]
     gnn_dropout = config["gnn_dropout"]
@@ -232,6 +237,7 @@ def load_pretraining_model(config):
 
     return student, teacher
 
+
 def get_pretraining_dataloader(config, transform, transform_params):
     gt = np.load(GT_PATH, allow_pickle=True)[()]
 
@@ -243,9 +249,12 @@ def get_pretraining_dataloader(config, transform, transform_params):
         transform_params=transform_params,
     )
 
-    train_loader = DataLoader(train_dataset, batch_size=config["batch_size"], shuffle=True, num_workers=1)
+    train_loader = DataLoader(
+        train_dataset, batch_size=config["batch_size"], shuffle=True, num_workers=1
+    )
 
     return train_loader
+
 
 def get_transform(config):
     g_paramrs = GraphDataAugParams(
@@ -267,6 +276,7 @@ def get_transform(config):
 
     return random_data_aug, DataAugParams(graph_params=g_paramrs)
 
+
 def get_transform_gnn(config):
     g_paramrs = GraphDataAugParams(
         lambda_aug=config["lambda_aug"],
@@ -274,6 +284,7 @@ def get_transform_gnn(config):
         max_aug=config["max_aug"],
         p_edge_pertubation=config["p_edge_pertubation"],
         edge_pertubation=config["edge_pertubation"],
+        uniform_edge_number=config.get("uniform_edge_number", False),
         p_graph_sampling=config["p_graph_sampling"],
         graph_sampling=config["graph_sampling"],
         p_features_noise=config["p_features_noise"],
@@ -286,6 +297,7 @@ def get_transform_gnn(config):
     )
 
     return random_graph_data_aug, g_paramrs
+
 
 def get_scheduler(config, train_loader):
     nb_epochs = config["nb_epochs"]

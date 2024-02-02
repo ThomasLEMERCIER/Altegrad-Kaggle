@@ -28,7 +28,7 @@ avg_pool_nlp: False
 top_k_loss: 440
 top_k_scheduler:
   start: 440
-  end: 180
+  end: 100
 optimizer: adamw
 
 # ==== NLP checkpoint ==== #
@@ -39,12 +39,13 @@ fine_tuning: False
 checkpoint_name: null
 
 # ==== Transform ==== #
-lambda_aug: 0.
+lambda_aug: 0.4
 min_aug: 0
-max_aug: 0
+max_aug: 1
 
-p_edge_pertubation: 0.
-edge_pertubation: 0.
+p_edge_pertubation: 1.
+edge_pertubation: 0.4
+uniform_edge_number: true
 
 p_graph_sampling: 0.
 graph_sampling: 0.

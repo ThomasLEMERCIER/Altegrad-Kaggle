@@ -14,6 +14,7 @@ class GraphDataAugParams:
 
     p_edge_pertubation: float
     edge_pertubation: float
+    uniform_edge_number: bool
 
     p_graph_sampling: float
     graph_sampling: float
@@ -35,7 +36,7 @@ class DataAugParams:
     graph_params: GraphDataAugParams
 
 
-def edge_pertubation(x, edge_index, p):
+def edge_pertubation(x, edge_index, p, uniform_edge_number=False):
     """
     x: node features torch tensor of shape (num_nodes, num_node_features)
     edge_index: edge index torch tensor of shape (2, num_edges)
@@ -43,6 +44,9 @@ def edge_pertubation(x, edge_index, p):
 
     returns: perturbed edge index i.e. for an adjacency matrix A, A' = A XOR E, E bernoulli random variable matrix
     """
+    if uniform_edge_number:
+        p = random.random() * p
+
     edge_index, _ = tg_utils.dropout_edge(edge_index, p=p, force_undirected=True)
     # p is the proportion of new edges to add
     if (
@@ -175,7 +179,7 @@ def random_graph_data_aug(x, edge_index, params: GraphDataAugParams):
     )
 
     aug_param_list = [
-        (params.edge_pertubation,),
+        (params.edge_pertubation, params.uniform_edge_number),
         (params.graph_sampling,),
         (params.features_noise,),
         (params.features_shuffling,),
