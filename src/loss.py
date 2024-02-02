@@ -42,7 +42,7 @@ def contrastive_loss_with_unlabeled(graph_embedding, text_embedding, has_text, n
     labels = torch.zeros_like(logits, dtype=torch.float32, device=graph_embedding.device)
     labels[has_text, :] = torch.eye(has_text.sum(), device=graph_embedding.device)
     if top_k is not None:
-        top_k = min(top_k, logits.shape[0])
+        top_k = min(top_k, has_text.sum())
         return (
             torch.topk(
                 torch.nn.functional.cross_entropy(logits[has_text, :], labels[has_text, :], reduction="none"),
