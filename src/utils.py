@@ -9,7 +9,8 @@ from torch_geometric.loader import DataLoader
 
 # Local application/library specific imports
 from .model import Model, GraphEncoder
-from .dataset import GraphTextDataset, GraphPretrainingDataset
+from .sampler import SamplerWithUnlabeled
+from .dataset import GraphTextDataset, GraphPretrainingDataset, MultiDataset
 from torch_geometric.loader import DataLoader
 from src.scheduler import warmup_cosineLR, constantLR
 from .constants import CHECKPOINT_FOLDER, NODE_FEATURES_SIZE, ROOT_DATA, GT_PATH
@@ -141,17 +142,30 @@ def get_dataloaders(
             drop_last=False,
         )
         return val_loader
+    
+    if config.get("use_unlabeled", False):
+        train_dataset = MultiDataset(
+            root=ROOT_DATA,
+            gt=gt,
+            split="train",
+            tokenizer=tokenizer,
+            nlp_model=config["nlp_model_name"],
+            in_memory=True,
+            transform=transform,
+            transform_params=transform_params,
+        )
+    else:
+        train_dataset = GraphTextDataset(
+            root=ROOT_DATA,
+            gt=gt,
+            split="train",
+            tokenizer=tokenizer,
+            nlp_model=config["nlp_model_name"],
+            in_memory=True,
+            transform=transform,
+            transform_params=transform_params,
+        )
 
-    train_dataset = GraphTextDataset(
-        root=ROOT_DATA,
-        gt=gt,
-        split="train",
-        tokenizer=tokenizer,
-        nlp_model=config["nlp_model_name"],
-        in_memory=True,
-        transform=transform,
-        transform_params=transform_params,
-    )
     val_dataset = GraphTextDataset(
         root=ROOT_DATA,
         gt=gt,
@@ -161,9 +175,22 @@ def get_dataloaders(
         in_memory=True,
     )
 
-    train_loader = DataLoader(
-        train_dataset, batch_size=config["batch_size"], shuffle=True, num_workers=1
-    )
+    if config.get("use_unlabeled", False):
+        train_loader = DataLoader(
+            train_dataset,
+            batch_size=config["batch_size"],
+            shuffle=False,
+            num_workers=1,
+            drop_last=False,
+            sampler=SamplerWithUnlabeled(
+                train_dataset, config["unlabeled_samples_share"]
+            ),
+        )
+
+    else:
+        train_loader = DataLoader(
+            train_dataset, batch_size=config["batch_size"], shuffle=True, num_workers=1
+        )
     val_loader = DataLoader(
         val_dataset, batch_size=config["batch_size"], shuffle=True, num_workers=1
     )
