@@ -436,8 +436,8 @@ class MultiDataset(Dataset):
             data = Data(
                 x=x,
                 edge_index=edge_index,
-                attention_mask=[],
-                input_ids=[],
+                attention_mask=torch.empty(0),
+                input_ids=torch.empty(0),
                 has_text=False
             )
             torch.save(data, osp.join(self.preprocessed_dir, "data_{}.pt".format(file_info[1])))
