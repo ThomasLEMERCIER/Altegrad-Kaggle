@@ -346,16 +346,15 @@ class MultiDataset(Dataset):
         self,
         root,
         gt,
-        split,
         tokenizer,
         nlp_model,
         in_memory=True,
         transform=None,
         transform_params=None,
     ):
+        print("Creating MultiDataset")
         self.root = root
         self.gt = gt
-        self.split = split
         self.nlp_model = nlp_model
         self.tokenizer = tokenizer
         self.in_memory = in_memory
@@ -366,11 +365,12 @@ class MultiDataset(Dataset):
             transform_params  # not overwriting the transform method of Dataset
         )
         self.description = (
-            pd.read_csv(osp.join(self.root, split + ".tsv"), sep="\t", header=None)
+            pd.read_csv(osp.join(self.root, "train" + ".tsv"), sep="\t", header=None)
             .set_index(0)[1]
             .to_dict()
         )
         self.cids = list(self.description.keys())
+        self.val_cids = list(pd.read_csv(osp.join(self.root, "train" + ".tsv"), sep="\t", header=None).set_index(0)[1].to_dict().keys())
 
         self.preprocessed_dir = osp.join(
             self.root, "preprocessed", self.nlp_model, "multi", self.split
@@ -397,6 +397,7 @@ class MultiDataset(Dataset):
         num_workers = os.cpu_count()
         all_graphs = [file for file in os.listdir(osp.join(self.root, "raw")) if file.endswith(".graph")]
         only_graphs = list(filter(lambda x: x.split(".")[0] in self.cids, all_graphs))
+        only_graphs = list(filter(lambda x: x.split(".")[0] not in self.val_cids, only_graphs))
         files_to_process = [(cid, idx, True) for idx, cid in enumerate(self.cids)] + [(file, idx+len(self.cids), False) for idx, file in enumerate(only_graphs)]
 
         with ThreadPoolExecutor(max_workers=num_workers) as executor:

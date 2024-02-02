@@ -147,7 +147,6 @@ def get_dataloaders(
         train_dataset = MultiDataset(
             root=ROOT_DATA,
             gt=gt,
-            split="train",
             tokenizer=tokenizer,
             nlp_model=config["nlp_model_name"],
             in_memory=True,
