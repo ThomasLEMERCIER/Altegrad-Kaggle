@@ -8,7 +8,7 @@ class SamplerWithUnlabeled(Sampler[int]):
                  unlabeled_samples_share: float,
     ):
                  
-        super().__init__(dataset)
+        super().__init__()
         self.data_source = dataset
         self.unlabeled_samples_share = unlabeled_samples_share
 
