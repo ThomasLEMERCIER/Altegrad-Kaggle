@@ -370,7 +370,7 @@ class MultiDataset(Dataset):
             .to_dict()
         )
         self.cids = list(self.description.keys())
-        self.val_cids = list(pd.read_csv(osp.join(self.root, "train" + ".tsv"), sep="\t", header=None).set_index(0)[1].to_dict().keys())
+        self.val_cids = list(pd.read_csv(osp.join(self.root, "val" + ".tsv"), sep="\t", header=None).set_index(0)[1].to_dict().keys())
 
         self.preprocessed_dir = osp.join(
             self.root, "preprocessed", self.nlp_model, "multi",
