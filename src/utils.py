@@ -263,6 +263,7 @@ def get_transform(config):
         max_aug=config["max_aug"],
         p_edge_pertubation=config["p_edge_pertubation"],
         edge_pertubation=config["edge_pertubation"],
+        uniform_edge_number=config.get("uniform_edge_number", False),
         p_graph_sampling=config["p_graph_sampling"],
         graph_sampling=config["graph_sampling"],
         p_features_noise=config["p_features_noise"],

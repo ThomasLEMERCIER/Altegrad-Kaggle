@@ -49,13 +49,13 @@ def edge_pertubation(x, edge_index, p, uniform_edge_number=False):
 
     edge_index, _ = tg_utils.dropout_edge(edge_index, p=p, force_undirected=True)
     # p is the proportion of new edges to add
-    if (
-        int(edge_index.shape[1] * p / (1 - p)) <= 1
-    ):  # if p is too small to add any edges
+    if int(edge_index.shape[1] * p) <= 1:  # if p is too small to add any edges
         return x, edge_index
+
     edge_index, _ = tg_utils.add_random_edge(
         edge_index, p=p, force_undirected=True, num_nodes=x.shape[0]
     )
+
     return x, edge_index
 
 
