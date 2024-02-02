@@ -396,7 +396,7 @@ class MultiDataset(Dataset):
         os.environ["TOKENIZERS_PARALLELISM"] = "false"
         num_workers = os.cpu_count()
         all_graphs = [file for file in os.listdir(osp.join(self.root, "raw")) if file.endswith(".graph")]
-        only_graphs = list(filter(lambda x: x.split(".")[0] in self.cids, all_graphs))
+        only_graphs = list(filter(lambda x: x.split(".")[0] not in self.cids, all_graphs))
         only_graphs = list(filter(lambda x: x.split(".")[0] not in self.val_cids, only_graphs))
         files_to_process = [(cid, idx, True) for idx, cid in enumerate(self.cids)] + [(file, idx+len(self.cids), False) for idx, file in enumerate(only_graphs)]
 
