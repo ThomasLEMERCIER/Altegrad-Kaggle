@@ -397,9 +397,9 @@ class MultiDataset(Dataset):
         num_workers = os.cpu_count()
         all_graphs = [file for file in os.listdir(osp.join(self.root, "raw")) if file.endswith(".graph")]
         print("All graphs: ", len(all_graphs))
-        only_graphs = list(filter(lambda x: x.split(".")[0] not in self.cids, all_graphs))
+        only_graphs = list(filter(lambda x: int(x.split(".")[0]) not in self.cids, all_graphs))
         print("Remaining graphs after filtering training data: ", len(only_graphs))
-        only_graphs = list(filter(lambda x: x.split(".")[0] not in self.val_cids, only_graphs))
+        only_graphs = list(filter(lambda x: int(x.split(".")[0]) not in self.val_cids, only_graphs))
         print("Remaining graphs after filtering validation data: ", len(only_graphs))
         files_to_process = [(cid, idx, True) for idx, cid in enumerate(self.cids)] + [(file, idx+len(self.cids), False) for idx, file in enumerate(only_graphs)]
 
